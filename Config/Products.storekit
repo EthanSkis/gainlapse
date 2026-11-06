@@ -1,0 +1,47 @@
+{
+  "appPolicies" : { "eula" : "", "policies" : [ { "locale" : "en_US", "policyText" : "", "policyURL" : "" } ] },
+  "identifier" : "A7C1E5D0",
+  "nonRenewingSubscriptions" : [ ],
+  "products" : [ ],
+  "settings" : { "_failTransactionsEnabled" : false, "_storeKitErrors" : [ ] },
+  "subscriptionGroups" : [
+    {
+      "id" : "21000001",
+      "localizations" : [ ],
+      "name" : "Gainlapse",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [ ],
+          "codeOffers" : [ ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21000002",
+          "introductoryOffer" : { "internalID" : "21000012", "paymentMode" : "free", "subscriptionPeriod" : "P1W" },
+          "localizations" : [ { "description" : "Weekly check-ins and your timelapse", "displayName" : "Gainlapse Weekly", "locale" : "en_US" } ],
+          "productID" : "com.ethangardner.gainlapse.weekly",
+          "recurringSubscriptionPeriod" : "P1W",
+          "referenceName" : "Weekly",
+          "subscriptionGroupID" : "21000001",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [ ],
+          "codeOffers" : [ ],
+          "displayPrice" : "59.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21000003",
+          "introductoryOffer" : { "internalID" : "21000013", "paymentMode" : "free", "subscriptionPeriod" : "P1W" },
+          "localizations" : [ { "description" : "Weekly check-ins and your timelapse", "displayName" : "Gainlapse Annual", "locale" : "en_US" } ],
+          "productID" : "com.ethangardner.gainlapse.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual",
+          "subscriptionGroupID" : "21000001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : { "major" : 4, "minor" : 0 }
+}

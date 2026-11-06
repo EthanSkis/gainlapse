@@ -1,0 +1,7 @@
+No account or sign-in is needed.
+
+How to review: complete the short onboarding and take a photo (a person should be in frame), then start the free trial on the paywall using a Sandbox account. On Home, open the check-in for your photo and allow AI check-ins. The first photo gets a welcome note and tips, and doesn't assess the body. Later photos are compared with an earlier one.
+
+AI: photos go to our server (Supabase) and to Anthropic's Claude API. The app asks for permission before anything is sent, and it can be turned off in Settings. Photos aren't stored on our server. The AI never gives scores, ratings, body fat guesses or diet advice. A photo without one adult person in it gets a request to retake. Check-ins are limited per subscription, so please avoid running many in a row.
+
+The next photo opens after about 6 days, so a comparison can't be seen on the same day.

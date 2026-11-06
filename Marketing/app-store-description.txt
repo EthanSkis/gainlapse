@@ -1,0 +1,21 @@
+Progress in the gym is slow, and hard to see in the mirror. Gainlapse makes it visible, with one photo a week.
+
+WEEKLY PHOTO
+A guided camera with a timer and a faint overlay of your last photo helps every shot line up. Pick a day and get a reminder.
+
+AI CHECK-IN
+After your photo, get short, honest feedback on what's visibly changing and on your consistency, plus one thing to focus on this week. Check-ins never score or rate your body, guess your body fat, or talk about calories.
+
+AUTOMATIC TIMELAPSE
+Every photo is added to your timelapse. Compare any two weeks, play it back, and export a video when you want to share it.
+
+PRIVATE BY DESIGN
+There's no feed and no public profile. Photos are saved in the app, not your photo library. AI check-ins are optional: the app asks first, then sends your photos to its server and to Anthropic's Claude AI to write your feedback. They aren't stored on the Gainlapse server.
+
+SUBSCRIPTION
+Gainlapse requires a subscription: weekly or annual, each with a 7-day free trial for new subscribers. Payment is charged to your Apple Account when the trial ends. Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period. Manage or cancel any time in your Apple Account settings.
+
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://gainlapse.vercel.app/privacy
+
+Gainlapse is for adults 18 and older. It isn't medical advice.

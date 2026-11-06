@@ -1,0 +1,17 @@
+.DS_Store
+
+# Xcode
+xcuserdata/
+DerivedData/
+build/
+*.xcarchive
+*.ipa
+*.dSYM.zip
+
+# Local secrets and tooling
+.env*
+*.p8
+*.p12
+*.mobileprovision
+.vercel/
+supabase/.temp/
