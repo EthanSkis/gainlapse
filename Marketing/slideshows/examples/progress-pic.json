@@ -1,0 +1,45 @@
+{
+  "format": "tiktok",
+  "caption": "Most progress pics are set up to fail. Here's how to take one that actually shows your gains 📌 #gymtok #progresspics #fitnesstips #gymprogress #gainlapse",
+  "slides": [
+    {
+      "type": "cover",
+      "photo": "https://images.pexels.com/photos/21369555/pexels-photo-21369555.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "headline": "How to take a progress pic that [[actually shows gains]]",
+      "sub": "(save this for photo day)"
+    },
+    {
+      "type": "tip",
+      "heading": "Same spot every time",
+      "body": "Same mirror, same distance.\n\nPut a piece of tape on the floor where your feet go."
+    },
+    {
+      "type": "tip",
+      "heading": "Same light, same time of day",
+      "body": "Lighting changes how you look more than a month of training.\n\nMorning, before you eat, same lights on."
+    },
+    {
+      "type": "tip",
+      "heading": "Same pose, no flexing",
+      "body": "Relaxed, front and side.\n\nFlex in one and not the other and the comparison is useless."
+    },
+    {
+      "type": "tip",
+      "number": "04",
+      "heading": "Once a week.\nNot every day.",
+      "body": "Pick a photo day and stick to it.\n\nThen compare week 1 to week 12, not today to yesterday."
+    },
+    {
+      "type": "app",
+      "heading": "So we built\n[[an app for this]]",
+      "body": "A faint overlay of last week's photo lines up every shot. Then it builds your timelapse.",
+      "screenshot": "../../screenshots/4-compare.jpg"
+    },
+    {
+      "type": "cta",
+      "headline": "Search [[Gainlapse]] on the App Store",
+      "body": "Follow for more. Take your week 1 photo today.",
+      "pill": "Save this for photo day"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "format": "instagram",
+  "caption": "The whole routine. One photo a week 📸 #gymprogress #progresspics #gainlapse",
+  "slides": [
+    {
+      "type": "statement",
+      "background": "dark",
+      "stamp": "The whole routine",
+      "headline": "You don't need a [[new program]]",
+      "sub": "You need proof the one you're on is working."
+    },
+    {
+      "type": "statement",
+      "headline": "1 photo\na week",
+      "sub": "Same spot. Same light. That's it."
+    },
+    {
+      "type": "app",
+      "heading": "Watch it [[stack up]]",
+      "body": "Every photo joins your timelapse.",
+      "screenshot": "../../screenshots/3-timelapse.jpg"
+    },
+    {
+      "type": "cta",
+      "body": "Take your week 1 photo today.",
+      "pill": "Follow for more"
+    }
+  ]
+}
