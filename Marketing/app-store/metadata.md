@@ -62,4 +62,20 @@ Fresh look on the App Store, same simple routine: one photo a week, an honest ch
 - Privacy Policy URL: `https://gainlapse.com/privacy`
 
 ## Screenshots (iPhone 6.9" display, 1290 x 2796)
-Upload `screenshots/01.png` through `screenshots/06.png` in order.
+Upload `screenshots/01.png` through `screenshots/06.png` in order. The first three are the ones that show in search results, so they lead with the strongest features.
+
+## Creative assets (iOS 27 and later)
+- Product page header: `creative/header-21x9.png` (3840 x 1646)
+- Search results: `creative/search-results-3x2.png` (3840 x 2560)
+- Universal (header and search results): `creative/universal-16x9.png` (5244 x 2950)
+
+All PNGs are opaque (no alpha), as App Store Connect requires.
+
+## Checked against Apple's asset best practices
+- No pricing, discounts, free-trial offers, URLs or copyright symbols in any image.
+- No ratings, awards, user counts or other claims that can't be verified, and no Apple recognitions.
+- No other platforms' logos.
+- Every screenshot shows real app UI, ordered the way someone uses the app: photo, check-in, timelapse, streak, privacy.
+- Text is a short phrase per frame, not a description.
+- Bodies in the app UI are blurred placeholders, so nothing breaks the 4+ asset rule.
+- Header and universal assets keep the headline and phones in the center of the frame so device cropping doesn't cut them.
