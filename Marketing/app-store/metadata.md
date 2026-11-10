@@ -62,7 +62,7 @@ Fresh look on the App Store, same simple routine: one photo a week, an honest ch
 - Privacy Policy URL: `https://gainlapse.com/privacy`
 
 ## Screenshots (iPhone 6.9" display, 1290 x 2796)
-Upload `screenshots/01.png` through `screenshots/06.png` in order. The first three are the ones that show in search results, so they lead with the strongest features.
+Upload `screenshots/01.png` through `screenshots/06.png` in order (1290 x 2796, the 6.9" slot). For the 6.1"/6.3" slot, which only takes 1206 x 2622, use `screenshots-6.3in/`. The first three are the ones that show in search results, so they lead with the strongest features.
 
 ## Creative assets (iOS 27 and later)
 - Product page header: `creative/header-21x9.png` (3840 x 1646)
