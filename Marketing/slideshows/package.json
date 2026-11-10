@@ -1,0 +1,12 @@
+{
+  "name": "gainlapse-slideshows",
+  "private": true,
+  "description": "Turns a slideshow file into branded Gainlapse slide images for TikTok and Instagram.",
+  "scripts": {
+    "setup": "npm install && npx playwright install chromium",
+    "make": "node make.js"
+  },
+  "dependencies": {
+    "playwright": "1.48.2"
+  }
+}
