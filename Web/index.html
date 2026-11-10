@@ -1,5 +1,190 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-:root{color-scheme:dark}body{margin:0;background:#0f0d0c;color:#f4f1ee;font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-main{max-width:680px;margin:0 auto;padding:40px 16px 64px}h1{font-size:40px;line-height:1.1;margin:0 0 8px;color:#ff5a1f;text-transform:uppercase;letter-spacing:.5px}
-h2{font-size:20px;margin:32px 0 6px}a{color:#ff8a5c}.muted{color:#a8a19b}nav{margin-top:32px;display:flex;gap:18px;flex-wrap:wrap}</style><title>Gainlapse</title></head><body><main><h1>Gainlapse</h1><p>A weekly progress photo, a short AI check-in, and a timelapse that builds itself. For adults who lift.</p>
-<p>Your photos are private, there's no feed, and nothing is ever public unless you export it yourself.</p><nav><a href="/">Gainlapse</a><a href="/privacy">Privacy</a><a href="/support">Support</a></nav></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gainlapse: one photo a week, a timelapse of every gain</title>
+  <meta name="description" content="Gym progress is slow and hard to see in the mirror. Gainlapse makes it visible with one lined-up photo a week, honest AI check-ins, and a timelapse that builds itself.">
+  <link rel="canonical" href="https://gainlapse.com/">
+  <meta name="theme-color" content="#ff5a1f">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://gainlapse.com/">
+  <meta property="og:title" content="Gainlapse: one photo a week, a timelapse of every gain">
+  <meta property="og:description" content="Gym progress is hard to see in the mirror. Gainlapse makes it visible.">
+  <meta property="og:image" content="https://gainlapse.com/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,800..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" style="color:#0e0c0b"><span>Gainlapse</span></a>
+    <nav style="color:#0e0c0b">
+      <a href="#how" class="hide-sm">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="/support">Support</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div>
+        <h1 id="hero-title" class="display">Gain<br>lapse</h1>
+        <svg class="barbell" viewBox="0 0 640 200" aria-hidden="true"><rect x="0" y="90" width="640" height="20" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.15s" x="24" y="0" width="44" height="200" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.24s" x="76" y="0" width="44" height="200" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.33s" x="128" y="16" width="44" height="168" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.42s" x="180" y="16" width="44" height="168" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.51s" x="232" y="30" width="44" height="140" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.60s" x="284" y="30" width="44" height="140" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.69s" x="336" y="42" width="44" height="116" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.78s" x="388" y="42" width="44" height="116" rx="10" fill="currentColor"/></svg>
+        <p class="lede">One photo a week. A timelapse of every gain.</p>
+        <div class="cta-row">
+          <a class="btn btn-dark appstore-link" href="#get">Get Gainlapse for iPhone</a>
+          <span class="cta-note">7-day free trial</span>
+        </div>
+      </div>
+      <div class="phone">
+        <img src="/assets/5-home.webp" width="603" height="1311" alt="Gainlapse home screen showing Week 8, an 8-week streak and this week's focus">
+      </div>
+    </div>
+  </section>
+
+  <section class="ambient" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="stamp orange">Why it exists</span>
+        <h2 id="how-title" class="display">The mirror lies.<br><em>The timelapse doesn't.</em></h2>
+        <p>You see yourself every day, so you never see the change. Gainlapse takes one lined-up photo a week and stacks them until the progress is impossible to miss.</p>
+      </div>
+
+      <div class="features">
+        <article class="feature">
+          <div>
+            <span class="stamp orange">01 / Weekly photo</span>
+            <h3 class="display">Every shot lines up</h3>
+            <p>A guided camera with a timer and a faint overlay of last week's photo, so every picture matches the one before it. Pick your day and get a reminder.</p>
+          </div>
+          <div class="feature-shot"><div class="phone"><img src="/assets/4-compare.webp" width="603" height="1311" loading="lazy" alt="Week 1 compared side by side with Week 8"></div></div>
+        </article>
+
+        <article class="feature">
+          <div>
+            <span class="stamp orange">02 / AI check-in</span>
+            <h3 class="display">Honest, not harsh</h3>
+            <p>After each photo, get short feedback on what's visibly changing and on your consistency, plus one thing to focus on this week. It never scores your body, guesses body fat or talks calories.</p>
+          </div>
+          <div class="feature-shot"><div class="phone"><img src="/assets/2-checkin.webp" width="603" height="1311" loading="lazy" alt="A Week 8 check-in noting fuller shoulders and arms, with a focus for the week"></div></div>
+        </article>
+
+        <article class="feature">
+          <div>
+            <span class="stamp orange">03 / Automatic timelapse</span>
+            <h3 class="display">It builds itself</h3>
+            <p>Every photo is added to your timelapse. Scrub through it, compare any two weeks, and export a video when you're ready to show it off.</p>
+          </div>
+          <div class="feature-shot"><div class="phone"><img src="/assets/3-timelapse.webp" width="603" height="1311" loading="lazy" alt="Timelapse player scrubbing through eight weeks of photos"></div></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="streak" aria-labelledby="streak-title">
+    <div class="wrap">
+      <div class="streak-card">
+        <svg class="barbell" viewBox="0 0 470 200" aria-hidden="true"><rect x="0" y="90" width="470" height="20" rx="10" fill="currentColor" opacity="0.5"/><rect class="plate" style="animation-delay:0.15s" x="24" y="0" width="44" height="200" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.24s" x="76" y="0" width="44" height="200" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.33s" x="128" y="16" width="44" height="168" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.42s" x="180" y="16" width="44" height="168" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.51s" x="232" y="30" width="44" height="140" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.60s" x="284" y="30" width="44" height="140" rx="10" fill="currentColor"/><rect class="plate" style="animation-delay:0.69s" x="338" y="44" width="40" height="112" rx="9" fill="#0e0c0b" stroke="currentColor" stroke-width="4" stroke-dasharray="10 9"/></svg>
+        <div>
+          <span class="stamp">Your streak</span>
+          <h3 id="streak-title" class="display">One plate a week</h3>
+          <p>Every week with a photo loads another plate on the bar. Miss a week and you keep every plate you earned. Progress isn't taken away here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="private-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="stamp orange">Private by design</span>
+        <h2 id="private-title" class="display">Your photos.<br><em>Nobody else's.</em></h2>
+      </div>
+      <div class="privacy-grid">
+        <div>
+          <span class="stamp orange">No feed</span>
+          <h4>Nothing is public</h4>
+          <p>No profiles, no followers, no likes. A photo only leaves the app if you export it yourself.</p>
+        </div>
+        <div>
+          <span class="stamp orange">On your phone</span>
+          <h4>Not in your camera roll</h4>
+          <p>Photos are saved inside Gainlapse, not mixed into your photo library. No account, no ads, no tracking.</p>
+        </div>
+        <div>
+          <span class="stamp orange">You choose</span>
+          <h4>AI check-ins are opt-in</h4>
+          <p>The app asks first. Check-in photos are handled in memory and never stored on our server. <a href="/privacy" style="color:#ff8a5c">Read the privacy policy</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ambient" id="pricing" aria-labelledby="pricing-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="stamp orange">Pricing</span>
+        <h2 id="pricing-title" class="display">Try it free<br><em>for 7 days</em></h2>
+      </div>
+      <div class="pricing">
+        <div class="plan best">
+          <span class="badge">Best value</span>
+          <h4>Annual</h4>
+          <div class="price display">$59.99</div>
+          <div class="per">per year, about $5 a month</div>
+        </div>
+        <div class="plan">
+          <h4>Weekly</h4>
+          <div class="price display">$4.99</div>
+          <div class="per">per week</div>
+        </div>
+      </div>
+      <p class="pricing-note">Both plans start with a 7-day free trial for new subscribers. Payment is charged to your Apple Account when the trial ends and renews automatically unless you cancel at least 24 hours before the end of the period. Manage or cancel any time in your Apple Account settings.</p>
+    </div>
+  </section>
+
+  <section class="final" id="get" aria-labelledby="get-title">
+    <div class="wrap">
+      <h2 id="get-title" class="display">Start week 1</h2>
+      <p>Take one photo today. Future you will want to see it.</p>
+      <a class="btn btn-dark appstore-link" href="#get">Get Gainlapse for iPhone</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>&copy; 2026 Gainlapse. For adults 18+. Not medical advice.</span>
+    <nav>
+      <a href="/privacy">Privacy</a>
+      <a href="/support">Support</a>
+      <a href="mailto:gainlapse@gmail.com">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  // Load the streak plates when the card scrolls into view.
+  (function () {
+    var card = document.querySelector('.streak-card .barbell');
+    if (!card || !('IntersectionObserver' in window)) return;
+    card.classList.add('wait');
+    new IntersectionObserver(function (entries, obs) {
+      if (entries[0].isIntersecting) { card.classList.remove('wait'); obs.disconnect(); }
+    }, { threshold: 0.5 }).observe(card);
+  })();
+</script>
+</body>
+</html>
