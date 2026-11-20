@@ -5,3 +5,7 @@ How to review: complete the short onboarding and take a photo (a person should b
 AI: photos go to our server (Supabase) and to Anthropic's Claude API. The app asks for permission before anything is sent, and it can be turned off in Settings. Photos aren't stored on our server. The AI never gives scores, ratings, body fat guesses or diet advice. A photo without one adult person in it gets a request to retake. Check-ins are limited per subscription, so please avoid running many in a row.
 
 The next photo opens after about 6 days, so a comparison can't be seen on the same day.
+
+New in 1.1: weight and measurement logging, a compare slider, milestone recaps, share exports and a widget. Apple Health is optional: on Home, the weight card has "Sync weight from Apple Health". The app only reads body weight, never writes to Health, and Health data stays on the device. It isn't sent to our server or to the AI.
+
+The people in the screenshots are AI-generated sample photos of fictional adults, not real users.
