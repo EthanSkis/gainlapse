@@ -92,7 +92,7 @@ All PNGs are opaque (no alpha), as App Store Connect requires.
 - No other platforms' logos.
 - Every screenshot shows real app UI captured from the app: home, compare slider, first AI check-in, weight trend, sharing, privacy. See SCREENSHOTS.md for how they're made.
 - The people shown are AI-generated sample photos (`sample-photos/`, `sample-photos-2/`), not real users.
-- Still to do: the three creative assets below use the earlier design.
+- The three creative assets come from the same script and captures as the screenshots.
 - Text is a short phrase per frame, not a description.
 - The sample photos show adults in gym shorts and a sports bra. Check them against Apple's rule that screenshots suit a 4+ audience before submitting.
 - Header and universal assets keep the headline and phones in the center of the frame so device cropping doesn't cut them.

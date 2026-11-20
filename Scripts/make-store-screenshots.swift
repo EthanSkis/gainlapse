@@ -6,6 +6,7 @@
 //
 // Usage: swift Scripts/make-store-screenshots.swift <captures dir> <output dir>
 // Writes 01.png ... 06.png at 1290 x 2796 into <output dir>, and at 1206 x 2622 into <output dir>-6.3in.
+// Also writes the three wide creative assets into a `creative` folder beside <output dir>.
 import AppKit
 import CoreGraphics
 import Foundation
@@ -176,13 +177,13 @@ func drawImage(_ image: CGImage, in rect: CGRect, ctx: CGContext) {
 }
 
 /// The capture inside a plain, accurate phone body that runs off the bottom of the frame.
-func drawPhone(capture: String, patchTopFrom: String?, top: CGFloat, ctx: CGContext) {
+func drawPhone(capture: String, patchTopFrom: String?, top: CGFloat, ctx: CGContext,
+               centerX: CGFloat = designSize.width / 2, screenWidth: CGFloat = 1000) {
     let image = load(capture)
-    let screenWidth: CGFloat = 1000
     let scale = screenWidth / CGFloat(image.width)
-    let screen = CGRect(x: (designSize.width - screenWidth) / 2, y: top, width: screenWidth, height: CGFloat(image.height) * scale)
+    let screen = CGRect(x: centerX - screenWidth / 2, y: top, width: screenWidth, height: CGFloat(image.height) * scale)
     let screenRadius = 186 * scale          // the iPhone's own display corner
-    let bezel: CGFloat = 22
+    let bezel: CGFloat = 22 * screenWidth / 1000
     let body = screen.insetBy(dx: -bezel, dy: -bezel)
 
     // Shadow under the phone.
@@ -347,6 +348,65 @@ func write(_ image: CGImage, to url: URL) {
     }
     CGImageDestinationAddImage(destination, image, nil)
     CGImageDestinationFinalize(destination)
+}
+
+// MARK: Wide creative assets (product page header and search results)
+
+/// Headline centred over three phones. Everything important stays in the middle, because the App Store
+/// crops the sides of these images differently on each device.
+func renderWide(pixelSize: CGSize) -> CGImage {
+    let width = pixelSize.width, height = pixelSize.height
+    let ctx = CGContext(data: nil, width: Int(width), height: Int(height), bitsPerComponent: 8,
+                        bytesPerRow: 0, space: space, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+    ctx.translateBy(x: 0, y: height)
+    ctx.scaleBy(x: 1, y: -1)
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: true)
+
+    let gradient = CGGradient(colorsSpace: space, colors: [
+        CGColor(srgbRed: 1.0, green: 0.43, blue: 0.17, alpha: 1),
+        CGColor(srgbRed: 0.96, green: 0.30, blue: 0.08, alpha: 1),
+    ] as CFArray, locations: [0, 1])!
+    ctx.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: width, y: height), options: [])
+    let shade = CGGradient(colorsSpace: space, colors: [
+        CGColor(srgbRed: 0.45, green: 0.10, blue: 0, alpha: 0.45), CGColor(srgbRed: 0.45, green: 0.10, blue: 0, alpha: 0),
+    ] as CFArray, locations: [0, 1])!
+    ctx.drawRadialGradient(shade, startCenter: CGPoint(x: width / 2, y: height), startRadius: 0,
+                           endCenter: CGPoint(x: width / 2, y: height), endRadius: height * 1.1, options: [])
+
+    let eyebrow = "WEEKLY GYM PROGRESS PHOTOS"
+    let eyebrowFont = stampFont(height * 0.026)
+    let eyebrowKern = height * 0.006
+    draw(eyebrow, font: eyebrowFont, color: ink.withAlphaComponent(0.75),
+         at: CGPoint(x: (width - width_(eyebrow, eyebrowFont, eyebrowKern)) / 2, y: height * 0.07), kern: eyebrowKern)
+
+    let headline = "SEE EVERY GAIN"
+    var size = height * 0.2
+    while width_(headline, brandFont(size), -2) > min(width * 0.8, height * 1.9) { size -= 4 }
+    let font = brandFont(size)
+    let capTop = height * 0.125
+    draw(headline, font: font, color: ink,
+         at: CGPoint(x: (width - width_(headline, font, -2)) / 2, y: capTop - (font.ascender - font.capHeight)), kern: -2)
+
+    // Side phones first, so the middle one overlaps their shadows.
+    let middle = height * 0.36, side = height * 0.31
+    let offset = middle / 2 + side / 2 + height * 0.07
+    drawPhone(capture: "recap", patchTopFrom: nil, top: height * 0.47, ctx: ctx, centerX: width / 2 - offset, screenWidth: side)
+    drawPhone(capture: "checkin-start", patchTopFrom: nil, top: height * 0.47, ctx: ctx, centerX: width / 2 + offset, screenWidth: side)
+    drawPhone(capture: "home", patchTopFrom: nil, top: height * 0.385, ctx: ctx, centerX: width / 2, screenWidth: middle)
+
+    NSGraphicsContext.restoreGraphicsState()
+    return ctx.makeImage()!
+}
+
+func width_(_ text: String, _ font: NSFont, _ kern: CGFloat) -> CGFloat { width(of: text, font: font, kern: kern) }
+
+let creativeDirectory = outputDirectory.deletingLastPathComponent().appendingPathComponent("creative")
+for (name, size) in [("header-21x9.png", CGSize(width: 3840, height: 1646)),
+                     ("search-results-3x2.png", CGSize(width: 3840, height: 2560)),
+                     ("universal-16x9.png", CGSize(width: 5244, height: 2950))] {
+    write(renderWide(pixelSize: size), to: creativeDirectory.appendingPathComponent(name))
+    print("Wrote creative/\(name)")
 }
 
 let smallDirectory = URL(fileURLWithPath: outputDirectory.path + "-6.3in")
