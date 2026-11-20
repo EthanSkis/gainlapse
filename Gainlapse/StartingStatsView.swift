@@ -25,10 +25,13 @@ struct StartingStatsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Stamp(text: "Week 1 photo saved", color: Theme.accent)
+                    // Kept to two lines so the weight field stays in view above the keyboard on smaller iPhones.
                     Text("LOG YOUR STARTING POINT")
-                        .font(.brand(62))
+                        .font(.brand(52))
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.7)
                         .accessibilityAddTraits(.isHeader)
-                    Text("Optional. Your numbers are charted next to your photos, so you can see what the mirror and the scale each miss.")
+                    Text("Optional. Your numbers are charted next to your photos.")
                         .foregroundStyle(Theme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                     field(.weight)
@@ -46,7 +49,8 @@ struct StartingStatsView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 24)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
             }
             .scrollDismissesKeyboard(.interactively)
             .safeAreaInset(edge: .bottom) {
@@ -60,7 +64,10 @@ struct StartingStatsView: View {
                         .frame(minHeight: 36)
                 }
                 .padding(.horizontal, 20)
+                .padding(.top, 10)
                 .padding(.bottom, 8)
+                // Solid, so fields scrolling underneath never show through the buttons.
+                .background(Theme.background.ignoresSafeArea(edges: .bottom))
             }
         }
         .onAppear { focused = .weight }

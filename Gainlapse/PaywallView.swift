@@ -63,7 +63,7 @@ struct PaywallView: View {
                         benefit("A weekly photo that lines up with the last", symbol: "person.crop.rectangle.stack.fill")
                         benefit("Honest AI check-ins on what's changing", symbol: "text.bubble.fill")
                         benefit("A timelapse that builds itself", symbol: "play.square.stack.fill")
-                        benefit("Weight and measurements charted beside your photos", symbol: "chart.line.uptrend.xyaxis")
+                        benefit("Weight and measurements, charted", symbol: "chart.line.uptrend.xyaxis")
                     }
                     .font(.subheadline.weight(.medium))
                     if plans.isEmpty {
@@ -117,8 +117,11 @@ struct PaywallView: View {
                     }
                 }
             }
+            // Two lines at most, so both plans fit above the button on smaller iPhones.
             Text(isFirstWeek ? "KEEP YOUR TIMELAPSE GOING" : "PICK UP WHERE YOU LEFT OFF")
                 .font(.brand(60))
+                .lineLimit(2)
+                .minimumScaleFactor(0.6)
                 .accessibilityAddTraits(.isHeader)
         }
     }
@@ -188,6 +191,12 @@ struct PaywallView: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 8)
+        // If the plans ever run long, they fade out under the button instead of showing through it.
+        .background {
+            LinearGradient(colors: [Theme.background.opacity(0), Theme.background],
+                           startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.25))
+                .ignoresSafeArea()
+        }
     }
 
     private func start() async {
