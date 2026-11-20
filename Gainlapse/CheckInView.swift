@@ -10,6 +10,7 @@ struct CheckInView: View {
     @State private var phase: Phase = .idle
     @State private var didFinish = false
     @State private var needsRetake = false
+    @State private var showShare = false
 
     private enum Phase: Equatable {
         case idle, loading
@@ -39,21 +40,33 @@ struct CheckInView: View {
                 Button { dismiss() } label: { Image(systemName: "xmark") }
                     .accessibilityLabel("Close")
             }
+            if store.weekCheckIn(for: current) != nil {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showShare = true } label: { Image(systemName: "square.and.arrow.up") }
+                        .accessibilityLabel("Share your progress")
+                }
+            }
         }
+        .sheet(isPresented: $showShare) { ShareProgressSheet(pose: current.pose) }
         .sensoryFeedback(.success, trigger: didFinish)
         .task { await startIfAllowed() }
     }
 
-    private var photos: some View {
-        HStack(spacing: 10) {
-            if let comparison {
-                labeledPhoto(comparison, label: "Week \(store.weekNumber(for: comparison))")
+    @ViewBuilder private var photos: some View {
+        if let comparison {
+            VStack(spacing: 10) {
+                CompareSlider(before: comparison, after: current,
+                              beforeLabel: "Week \(store.weekNumber(for: comparison))", afterLabel: "This week")
+                    // Small enough that the check-in text below is still in view.
+                    .frame(maxHeight: 360)
+                StatChangesRow(from: comparison.date, to: current.date)
             }
-            labeledPhoto(current, label: comparison == nil ? "Week \(store.weekNumber(for: current))" : "This week")
+        } else {
+            // A single photo stays small enough to keep the text below it in view.
+            labeledPhoto(current, label: "Week \(store.weekNumber(for: current))")
+                .frame(maxWidth: 220)
+                .frame(maxWidth: .infinity)
         }
-        // A single photo stays small enough to keep the text below it in view.
-        .frame(maxWidth: comparison == nil ? 220 : .infinity)
-        .frame(maxWidth: .infinity)
     }
 
     private func labeledPhoto(_ photo: ProgressPhoto, label: String) -> some View {
@@ -163,6 +176,23 @@ struct CheckInView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
+        // Text scrolling underneath fades out instead of showing through the buttons.
+        .background {
+            LinearGradient(colors: [Theme.background.opacity(0), Theme.background.opacity(0.95)],
+                           startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.35))
+                .ignoresSafeArea()
+        }
+    }
+
+    /// Only the direction of the weight change goes to the AI, so it can explain what it sees
+    /// without ever quoting a number. Weights from Apple Health are never used, so Health data stays on the phone.
+    private var weightTrend: String? {
+        guard let comparison,
+              let change = store.change(for: .weight, from: comparison.date, to: current.date, typedOnly: true) else {
+            return nil
+        }
+        if abs(change) < 0.3 { return "steady" }
+        return change > 0 ? "up" : "down"
     }
 
     private func startIfAllowed() async {
@@ -191,7 +221,8 @@ struct CheckInView: View {
             let checkIn = try await CheckInClient.request(goal: store.profile.goal ?? .justStarted,
                                                           pose: current.pose,
                                                           week: store.weekNumber(for: current),
-                                                          current: image, previous: earlier)
+                                                          current: image, previous: earlier,
+                                                          weightTrend: weightTrend)
             store.recordAIRequest()
             store.setCheckIn(checkIn, for: current)
             phase = .idle

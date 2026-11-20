@@ -12,7 +12,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         -> UNNotificationPresentationOptions { [.banner, .sound] }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        await MainActor.run { ProgressStore.shared.cameraRequested = true }
+        let isRecap = response.notification.request.content.userInfo["kind"] as? String == "recap"
+        await MainActor.run {
+            if isRecap { ProgressStore.shared.recapRequested = true } else { ProgressStore.shared.cameraRequested = true }
+        }
     }
 }
 
@@ -30,6 +33,17 @@ struct GainlapseApp: App {
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
                 .task { await subscriptions.start() }
+                // Links from the home screen widget open the exact thing it shows.
+                .onOpenURL { url in
+                    switch url.host() {
+                    case "photo": store.cameraRequested = true
+                    case "log-weight": store.weightLogRequested = true
+                    #if DEBUG
+                    case "shot": store.debugShot = url.lastPathComponent
+                    #endif
+                    default: break
+                    }
+                }
         }
     }
 }
@@ -40,7 +54,10 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if !subscriptions.hasChecked {
+            // Onboarding never waits on the App Store; only the choice between the app and the paywall does.
+            if !store.profile.onboardingDone {
+                OnboardingView()
+            } else if !subscriptions.hasChecked {
                 ZStack {
                     AmbientBackground()
                     VStack(spacing: 18) {
@@ -48,8 +65,6 @@ struct RootView: View {
                         ProgressView().tint(.white)
                     }
                 }
-            } else if !store.profile.onboardingDone {
-                OnboardingView()
             } else if !subscriptions.isEntitled {
                 PaywallView()
             } else {
@@ -58,6 +73,17 @@ struct RootView: View {
         }
         .animation(.smooth, value: store.profile.onboardingDone)
         .animation(.smooth, value: subscriptions.isEntitled)
+    }
+}
+
+struct RecapID: Identifiable {
+    let weeks: Int
+    var id: Int { weeks }
+}
+
+extension MainTabs {
+    static func latestReachedRecap(_ store: ProgressStore) -> Int? {
+        ProgressStore.recapWeeks.filter { $0 <= store.photoWeekCount }.max()
     }
 }
 
@@ -72,8 +98,14 @@ struct MainTabs: View {
     private enum Item: Int { case home, capture, profile }
 
     @Environment(ProgressStore.self) private var store
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selection = Item.home
     @State private var capture: CaptureRequest?
+    @State private var logWeight = false
+    @State private var recapWeeks: Int?
+    #if DEBUG
+    @State private var debugShare = false
+    #endif
     @State private var homeTop = 0
     @State private var profileTop = 0
 
@@ -117,6 +149,38 @@ struct MainTabs: View {
         }
         .task(id: store.photos.count) {
             await Reminders.reschedule(dates: store.upcomingCheckIns())
+            if let weeks = store.pendingRecap { await Reminders.scheduleRecap(weeks: weeks) }
+        }
+        .task(id: scenePhase) {
+            if scenePhase == .active { await store.syncHealth() }
+        }
+        .sheet(isPresented: $logWeight) { LogBodySheet(metric: .weight) }
+        .sheet(item: Binding(get: { recapWeeks.map(RecapID.init) }, set: { recapWeeks = $0?.weeks })) { recap in
+            RecapView(weeks: recap.weeks)
+        }
+        #if DEBUG
+        .sheet(isPresented: $debugShare) { ShareProgressSheet(pose: .front) }
+        .onChange(of: store.debugShot, initial: true) { _, shot in
+            switch shot {
+            case "home": selection = .home
+            case "profile": selection = .profile
+            case "recap": selection = .home; recapWeeks = Self.latestReachedRecap(store)
+            case "share": selection = .profile; debugShare = true
+            default: break
+            }
+        }
+        #endif
+        .onChange(of: store.weightLogRequested, initial: true) { _, requested in
+            guard requested else { return }
+            store.weightLogRequested = false
+            selection = .home
+            logWeight = true
+        }
+        .onChange(of: store.recapRequested, initial: true) { _, requested in
+            guard requested else { return }
+            store.recapRequested = false
+            selection = .home
+            recapWeeks = store.pendingRecap ?? Self.latestReachedRecap(store)
         }
         .onChange(of: store.cameraRequested, initial: true) { _, requested in
             guard requested else { return }

@@ -29,6 +29,33 @@ enum Reminders {
         center.removePendingNotificationRequests(withIdentifiers: pending.filter { $0.hasPrefix(identifierPrefix) })
     }
 
+    private static let recapIdentifier = "recap"
+
+    /// Tells the user a milestone recap is ready, this evening or tomorrow morning if it's already late.
+    static func scheduleRecap(weeks: Int) async {
+        guard await status() == .authorized else { return }
+        let calendar = Calendar.current
+        let now = Date.now
+        var date = calendar.date(bySettingHour: 19, minute: 0, second: 0, of: now) ?? now
+        if date.timeIntervalSince(now) < 30 * 60 {
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now
+            date = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+        }
+        let content = UNMutableNotificationContent()
+        content.title = "\(ProgressStore.recapTitle(weeks)): your recap is ready"
+        content.body = "See \(weeks) weeks side by side, then share it if you like."
+        content.sound = .default
+        content.userInfo = ["kind": "recap"]
+        let parts = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
+        try? await UNUserNotificationCenter.current()
+            .add(UNNotificationRequest(identifier: recapIdentifier, content: content, trigger: trigger))
+    }
+
+    static func cancelRecap() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [recapIdentifier])
+    }
+
     private static func schedule(dates: [Date]) async {
         let center = UNUserNotificationCenter.current()
         await cancelAll()

@@ -75,4 +75,12 @@ struct UserProfile: Codable {
     var draftPose: Pose?
     /// When the AI last answered, used to cap repeat requests. Optional so older saved data still loads.
     var aiRequestDates: [Date]?
+    /// Kilograms and centimetres when true, pounds and inches when false. nil follows the phone's region.
+    var usesMetric: Bool?
+    /// True once the user connects Apple Health for weight. nil means never offered or declined.
+    var healthSync: Bool?
+    /// Health samples the user deleted here, so the next sync doesn't bring them back.
+    var ignoredHealthIDs: [UUID]?
+    /// Week counts whose recap has been seen or dismissed.
+    var seenRecaps: [Int]?
 }

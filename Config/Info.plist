@@ -2,16 +2,29 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.ethangardner.gainlapse</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gainlapse</string>
+			</array>
+		</dict>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Gainlapse uses the camera to take your weekly progress photo.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Gainlapse reads your body weight from Apple Health to chart it beside your progress photos. It stays on your iPhone.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Gainlapse saves a timelapse to your photos only when you export one.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 	</dict>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSCameraUsageDescription</key>
-	<string>Gainlapse uses the camera to take your weekly progress photo.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Gainlapse saves a timelapse to your photos only when you export one.</string>
 </dict>
 </plist>

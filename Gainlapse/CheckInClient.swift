@@ -18,6 +18,8 @@ enum CheckInClient {
         let current: String
         let previous: String?
         let signed_transaction: String
+        /// "up", "down" or "steady" between the two photos. Never the number itself.
+        let weight_trend: String?
     }
 
     private struct ResponseBody: Decodable {
@@ -26,7 +28,8 @@ enum CheckInClient {
         let focus_tip: String
     }
 
-    static func request(goal: Goal, pose: Pose, week: Int, current: UIImage, previous: UIImage?) async throws -> CheckIn {
+    static func request(goal: Goal, pose: Pose, week: Int, current: UIImage, previous: UIImage?,
+                        weightTrend: String? = nil) async throws -> CheckIn {
         if DebugFlags.mockCheckIn {
             try await Task.sleep(for: .seconds(2))
             return CheckIn(
@@ -42,7 +45,7 @@ enum CheckInClient {
         let body = await Task.detached(priority: .userInitiated) {
             RequestBody(goal: goal.rawValue, pose: pose.rawValue, week: week,
                         current: encode(current) ?? "", previous: previous.flatMap(encode),
-                        signed_transaction: signedTransaction)
+                        signed_transaction: signedTransaction, weight_trend: weightTrend)
         }.value
 
         var request = URLRequest(url: url, timeoutInterval: 90)

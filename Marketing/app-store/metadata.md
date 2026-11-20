@@ -14,12 +14,12 @@ Weekly timelapse of your gains
 
 ## Promotional Text (170 max, can change any time without review)
 ```
-You can't see your gains in the mirror. Take one lined-up photo a week and watch them show up in your timelapse. Try it free for 7 days.
+You can't see your gains in the mirror. One lined-up photo a week, your weight trend beside it, and a recap at every milestone. Try it free for 7 days.
 ```
 
 ## Keywords (100 max, commas, no spaces, no words already in the name or subtitle)
 ```
-transformation,bodybuilding,workout,fitness,muscle,physique,lifting,before,after,recomp,tracker,body
+transformation,bodybuilding,workout,fitness,muscle,physique,lifting,before,after,weight,tracker
 ```
 
 ## Description (4000 max)
@@ -29,18 +29,27 @@ Progress in the gym is slow, and you can't see it in the mirror. You see yoursel
 ONE PHOTO A WEEK
 Pick your photo day and get a reminder. A guided camera with a timer and a faint overlay of last week's photo lines up every shot: same pose, same angle, same distance. That's what makes week 1 and week 12 a fair comparison.
 
+DRAG TO COMPARE
+Slide between this week and week 1 on the same photo, and watch the change appear under your finger.
+
 HONEST AI CHECK-INS
 After each photo, get short, honest feedback on what's visibly changing and on your consistency, plus one thing to focus on this week. Check-ins never score or rate your body, guess your body fat, or talk about calories.
 
+WEIGHT AND MEASUREMENTS
+Log your weight in seconds, or let Gainlapse read it from Apple Health. A smoothed 7-day trend sits beside your photos, so a heavy day of water weight doesn't hide real progress. Add waist, chest and arm measurements whenever you like.
+
 A TIMELAPSE THAT BUILDS ITSELF
-Every photo joins your timelapse automatically. Scrub through it, compare any two weeks side by side, and export a video when you're ready to show it off.
+Every photo joins your timelapse automatically. At one, two, three, six and twelve months, a recap puts week 1 next to now with the numbers that moved.
+
+MADE TO SHARE
+Turn your progress into a vertical timelapse video or a before-and-after image sized for TikTok, Reels and Stories, in a couple of taps. Nothing is shared until you choose where it goes.
 
 ONE PLATE A WEEK
-Every week with a photo loads another plate on your bar. Miss a week and you keep every plate you earned. Consistency is the whole game, so Gainlapse rewards it and never punishes a slip.
+Every week with a photo loads another plate on your bar. Miss a week and you keep every plate you earned. A home screen widget shows your weeks, your next photo day and your weight at a glance.
 
 PRIVATE BY DESIGN
-No feed, no followers, no public profile. No account, no ads, no tracking. Photos are saved inside the app, not mixed into your camera roll, and only leave if you export them yourself.
-AI check-ins are optional and the app asks first. When they're on, your photos go to our server and to Anthropic's Claude AI to write your feedback. They aren't stored on the Gainlapse server.
+No feed, no followers, no public profile. No account, no ads, no tracking. Photos and body stats stay inside the app on your iPhone, not mixed into your camera roll, and only leave if you export them yourself. Weight read from Apple Health stays on your iPhone.
+AI check-ins are optional and the app asks first. When they're on, your photos go to our server and to Anthropic's Claude AI to write your feedback, along with whether the weight you typed in went up, down or stayed the same, never the number and never anything from Apple Health. They aren't stored on the Gainlapse server.
 
 SUBSCRIPTION
 Gainlapse requires a subscription: weekly or annual, each with a 7-day free trial for new subscribers. Payment is charged to your Apple Account when the trial ends. Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period. Manage or cancel any time in your Apple Account settings.
@@ -53,7 +62,13 @@ Gainlapse is for adults 18 and older. It isn't medical advice.
 
 ## What's New in This Version (4000 max, only shows on an update)
 ```
-Fresh look on the App Store, same simple routine: one photo a week, an honest check-in, and a timelapse that builds itself. Thanks for lifting with us.
+The biggest update yet.
+- Log your weight and measurements, or read weight from Apple Health, with a smoothed trend beside your photos
+- Drag to compare this week against week 1
+- Milestone recaps at one, two, three, six and twelve months
+- Share a vertical timelapse or before-and-after made for TikTok, Reels and Stories
+- A home screen and Lock Screen widget
+- Opens faster
 ```
 
 ## URLs
@@ -75,7 +90,9 @@ All PNGs are opaque (no alpha), as App Store Connect requires.
 - No pricing, discounts, free-trial offers, URLs or copyright symbols in any image.
 - No ratings, awards, user counts or other claims that can't be verified, and no Apple recognitions.
 - No other platforms' logos.
-- Every screenshot shows real app UI, ordered the way someone uses the app: photo, check-in, timelapse, streak, privacy.
+- Every screenshot shows real app UI captured from the app: home, compare slider, first AI check-in, weight trend, sharing, privacy. See SCREENSHOTS.md for how they're made.
+- The people shown are AI-generated sample photos (`sample-photos/`, `sample-photos-2/`), not real users.
+- Still to do: the three creative assets below use the earlier design.
 - Text is a short phrase per frame, not a description.
-- Bodies in the app UI are blurred placeholders, so nothing breaks the 4+ asset rule.
+- The sample photos show adults in gym shorts and a sports bra. Check them against Apple's rule that screenshots suit a 4+ audience before submitting.
 - Header and universal assets keep the headline and phones in the center of the frame so device cropping doesn't cut them.

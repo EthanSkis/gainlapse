@@ -26,11 +26,20 @@ final class Subscriptions {
 
     func revokePreviewEntitlement() {
         UserDefaults.standard.removeObject(forKey: Self.previewKey)
+        UserDefaults.standard.removeObject(forKey: Self.lastKnownKey)
         isEntitled = false
     }
     #endif
 
+    /// The last answer from the App Store, so a returning subscriber opens straight into the app.
+    /// The real check still runs on every launch and corrects it.
+    private static let lastKnownKey = "subscription.lastKnownEntitled"
+
     func start() async {
+        if UserDefaults.standard.bool(forKey: Self.lastKnownKey) {
+            isEntitled = true
+            hasChecked = true
+        }
         updates = Task { [weak self] in
             for await update in Transaction.updates {
                 if case .verified(let transaction) = update { await transaction.finish() }
@@ -72,6 +81,7 @@ final class Subscriptions {
         if UserDefaults.standard.bool(forKey: Self.previewKey) { active = true }
         #endif
         isEntitled = active
+        UserDefaults.standard.set(active, forKey: Self.lastKnownKey)
     }
 
     /// Apple's signed record of the active subscription. The server checks it before each check-in.

@@ -15,6 +15,16 @@ struct SettingsView: View {
         Binding { store.profile.goal ?? .justStarted } set: { store.profile.goal = $0 }
     }
 
+    private var usesMetric: Binding<Bool> {
+        Binding { store.usesMetric } set: { store.profile.usesMetric = $0 }
+    }
+
+    private var healthSync: Binding<Bool> {
+        Binding { store.profile.healthSync == true } set: { on in
+            if on { Task { await store.connectHealth() } } else { store.profile.healthSync = false }
+        }
+    }
+
     private var aiEnabled: Binding<Bool> {
         Binding { store.profile.aiConsent == true } set: { store.profile.aiConsent = $0 }
     }
@@ -32,6 +42,13 @@ struct SettingsView: View {
                 Section {
                     Picker("Goal", selection: goal) {
                         ForEach(Goal.allCases) { option in Text(option.title).tag(option) }
+                    }
+                    Picker("Units", selection: usesMetric) {
+                        Text("Pounds and inches").tag(false)
+                        Text("Kilograms and centimetres").tag(true)
+                    }
+                    if HealthSync.isAvailable {
+                        Toggle("Weight from Apple Health", isOn: healthSync)
                     }
                 }
                 Section {

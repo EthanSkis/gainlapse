@@ -1,21 +1,34 @@
-Progress in the gym is slow, and hard to see in the mirror. Gainlapse makes it visible, with one photo a week.
+Progress in the gym is slow, and you can't see it in the mirror. You see yourself every day, so you never see the change. Gainlapse makes it visible with one photo a week.
 
-WEEKLY PHOTO
-A guided camera with a timer and a faint overlay of your last photo helps every shot line up. Pick a day and get a reminder.
+ONE PHOTO A WEEK
+Pick your photo day and get a reminder. A guided camera with a timer and a faint overlay of last week's photo lines up every shot: same pose, same angle, same distance. That's what makes week 1 and week 12 a fair comparison.
 
-AI CHECK-IN
-After your photo, get short, honest feedback on what's visibly changing and on your consistency, plus one thing to focus on this week. Check-ins never score or rate your body, guess your body fat, or talk about calories.
+DRAG TO COMPARE
+Slide between this week and week 1 on the same photo, and watch the change appear under your finger.
 
-AUTOMATIC TIMELAPSE
-Every photo is added to your timelapse. Compare any two weeks, play it back, and export a video when you want to share it.
+HONEST AI CHECK-INS
+After each photo, get short, honest feedback on what's visibly changing and on your consistency, plus one thing to focus on this week. Check-ins never score or rate your body, guess your body fat, or talk about calories.
+
+WEIGHT AND MEASUREMENTS
+Log your weight in seconds, or let Gainlapse read it from Apple Health. A smoothed 7-day trend sits beside your photos, so a heavy day of water weight doesn't hide real progress. Add waist, chest and arm measurements whenever you like.
+
+A TIMELAPSE THAT BUILDS ITSELF
+Every photo joins your timelapse automatically. At one, two, three, six and twelve months, a recap puts week 1 next to now with the numbers that moved.
+
+MADE TO SHARE
+Turn your progress into a vertical timelapse video or a before-and-after image sized for TikTok, Reels and Stories, in a couple of taps. Nothing is shared until you choose where it goes.
+
+ONE PLATE A WEEK
+Every week with a photo loads another plate on your bar. Miss a week and you keep every plate you earned. A home screen widget shows your weeks, your next photo day and your weight at a glance.
 
 PRIVATE BY DESIGN
-There's no feed and no public profile. Photos are saved in the app, not your photo library. AI check-ins are optional: the app asks first, then sends your photos to its server and to Anthropic's Claude AI to write your feedback. They aren't stored on the Gainlapse server.
+No feed, no followers, no public profile. No account, no ads, no tracking. Photos and body stats stay inside the app on your iPhone, not mixed into your camera roll, and only leave if you export them yourself. Weight read from Apple Health stays on your iPhone.
+AI check-ins are optional and the app asks first. When they're on, your photos go to our server and to Anthropic's Claude AI to write your feedback, along with whether the weight you typed in went up, down or stayed the same, never the number and never anything from Apple Health. They aren't stored on the Gainlapse server.
 
 SUBSCRIPTION
 Gainlapse requires a subscription: weekly or annual, each with a 7-day free trial for new subscribers. Payment is charged to your Apple Account when the trial ends. Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period. Manage or cancel any time in your Apple Account settings.
 
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Privacy Policy: https://gainlapse.vercel.app/privacy
+Privacy Policy: https://gainlapse.com/privacy
 
 Gainlapse is for adults 18 and older. It isn't medical advice.

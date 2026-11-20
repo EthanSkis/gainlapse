@@ -34,6 +34,11 @@ const GOALS: Record<string, string> = {
   just_started: "getting started in their first months at the gym",
 };
 const POSES = new Set(["front", "side", "back"]);
+const WEIGHT_TRENDS: Record<string, string> = {
+  up: "Their logged scale weight went up a little between these photos.",
+  down: "Their logged scale weight went down a little between these photos.",
+  steady: "Their logged scale weight stayed about the same between these photos.",
+};
 
 const SYSTEM_PROMPT = `You write the weekly check-in for Gainlapse, an app where adults who lift take a progress photo each week.
 
@@ -51,6 +56,7 @@ Boundaries that always apply, because this app can affect how people feel about 
 - Never mention diet, calories, macros or food quantities, and never encourage losing weight or eating less.
 - Don't comment on anyone's attractiveness, sexuality, or body parts in a sexualized way.
 - Lighting, angle and clothing differences can look like body changes. Mention them when they limit the comparison.
+- You may be told whether their logged scale weight went up, down or stayed the same between the photos. You may use it to help explain what you see (for example, the scale holding steady while the shoulders look fuller), but never state or guess a number, never treat a lower weight as better or praise losing weight, and never suggest changing their weight.
 
 Set "usable" to false, and leave "feedback" and "focus_tip" as short neutral text asking for a new photo, if the photo shows no person, the person looks under 18, the person is fully nude, or more than one person is shown. Otherwise set "usable" to true.
 
@@ -156,13 +162,15 @@ Deno.serve(async (req: Request) => {
     return json({ error: "invalid_request" }, 400);
   }
 
-  const { goal, pose, week, current, previous, signed_transaction } = body;
+  const { goal, pose, week, current, previous, signed_transaction, weight_trend } = body;
   if (
-    typeof goal !== "string" || !(goal in GOALS) ||
+    typeof goal !== "string" || !Object.hasOwn(GOALS, goal) ||
     typeof pose !== "string" || !POSES.has(pose) ||
     typeof week !== "number" || week < 1 || week > 1000 ||
     !validImage(current) ||
-    (previous !== undefined && previous !== null && !validImage(previous))
+    (previous !== undefined && previous !== null && !validImage(previous)) ||
+    (weight_trend !== undefined && weight_trend !== null &&
+      (typeof weight_trend !== "string" || !Object.hasOwn(WEIGHT_TRENDS, weight_trend)))
   ) {
     return json({ error: "invalid_request" }, 400);
   }
@@ -212,7 +220,8 @@ Deno.serve(async (req: Request) => {
     imageBlock(current),
     {
       type: "text",
-      text: `Goal: ${GOALS[goal]}. Pose: ${pose}. This is week ${week} of their timelapse.`,
+      text: `Goal: ${GOALS[goal]}. Pose: ${pose}. This is week ${week} of their timelapse.` +
+        (previous && typeof weight_trend === "string" ? ` ${WEIGHT_TRENDS[weight_trend]}` : ""),
     },
   );
 

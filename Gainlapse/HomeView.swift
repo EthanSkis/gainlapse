@@ -12,16 +12,23 @@ struct HomeView: View {
     @State private var checkInPhoto: ProgressPhoto?
     @State private var retakePose: Pose?
     @State private var reminderStatus: UNAuthorizationStatus = .authorized
+    @State private var logMetric: BodyMetric?
+    @State private var openRecap: RecapID?
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 16) {
                     hero.id("top")
+                    if let weeks = store.pendingRecap { recapCard(weeks) }
                     if isCheckInOff { checkInsOffCard }
                     if let focus = latestFocus { focusCard(focus) }
                     if store.photoWeekCount == 1 && store.hasPhotoThisWeek { comingUpCard }
-                    if reminderStatus == .denied || reminderStatus == .notDetermined { remindersCard }
+                    BodyTrendCard(metric: .weight) { logMetric = .weight }
+                        .padding(.horizontal, 16)
+                    MeasurementsRow { logMetric = $0 }
+                        .padding(.horizontal, 16)
+                    if (reminderStatus == .denied || reminderStatus == .notDetermined) && !DebugFlags.storeShots { remindersCard }
                     if store.hasPhotoThisWeek, let pose = store.missingPosesThisWeek.first {
                         Button("Add \(pose.title.lowercased()) pose") { onCapture(pose, false) }
                             .font(.subheadline.weight(.semibold))
@@ -29,7 +36,7 @@ struct HomeView: View {
                             .frame(minHeight: 44)
                     }
                 }
-                .padding(.bottom, 12)
+                .padding(.bottom, 90)
             }
             .ignoresSafeArea(edges: .top)
             .refreshable { await subscriptions.refreshEntitlement() }
@@ -40,6 +47,13 @@ struct HomeView: View {
         .background(AmbientBackground())
         .safeAreaInset(edge: .bottom) { primaryAction }
         .task(id: scenePhase) { reminderStatus = await Reminders.status() }
+        .sheet(item: $logMetric) { metric in LogBodySheet(metric: metric) }
+        .sheet(item: $openRecap) { recap in RecapView(weeks: recap.weeks) }
+        #if DEBUG
+        .onChange(of: store.debugShot, initial: true) { _, shot in
+            if shot == "checkin" { checkInPhoto = store.photos.last }
+        }
+        #endif
         .fullScreenCover(item: $checkInPhoto, onDismiss: {
             if let pose = retakePose {
                 retakePose = nil
@@ -99,7 +113,8 @@ struct HomeView: View {
                 }
                 .padding(16)
             }
-            .containerRelativeFrame(.vertical) { height, _ in height * 0.8 }
+            // Short enough that this week's numbers show without scrolling.
+            .containerRelativeFrame(.vertical) { height, _ in height * 0.64 }
         } else {
             VStack(spacing: 18) {
                 Barbell(plates: 0, height: 72).frame(width: 150)
@@ -143,6 +158,25 @@ struct HomeView: View {
     private func focusCard(_ focus: String) -> some View {
         infoCard("Your focus") {
             Text(focus).font(.body.weight(.medium)).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func recapCard(_ weeks: Int) -> some View {
+        infoCard("Recap ready") {
+            HStack(alignment: .top) {
+                Text("\(ProgressStore.recapTitle(weeks)). See week 1 next to now, and what changed.")
+                    .font(.body.weight(.medium))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                Button { store.markRecapSeen(weeks) } label: {
+                    Image(systemName: "xmark").font(.footnote.weight(.bold)).foregroundStyle(Theme.secondaryText)
+                        .frame(width: 32, height: 32)
+                }
+                .accessibilityLabel("Dismiss recap")
+            }
+            Button("See your recap") { openRecap = RecapID(weeks: weeks) }
+                .font(.subheadline.weight(.bold))
+                .frame(minHeight: 44)
         }
     }
 
@@ -200,6 +234,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.primary)
                 }
+            } else if !store.hasLoggedWeightToday {
+                // Between photo days, the reason to open the app is a quick weigh-in.
+                Button("Log today's weight") { logMetric = .weight }.buttonStyle(.primary)
             } else if let done = store.latestCheckInPhoto {
                 Button("See this week's check-in") { checkInPhoto = done }.buttonStyle(.primary)
             }

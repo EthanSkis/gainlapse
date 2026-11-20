@@ -13,6 +13,7 @@ struct ProfileView: View {
     @State private var showExport = false
     @State private var showSettings = false
     @State private var selectedPhoto: ProgressPhoto?
+    @State private var logMetric: BodyMetric?
 
     private var photos: [ProgressPhoto] { store.photos(for: pose) }
     private let gridColumns = Array(repeating: GridItem(.flexible(), spacing: 3), count: 3)
@@ -43,6 +44,7 @@ struct ProfileView: View {
                                 player
                                 comparison
                             }
+                            trends
                             allPhotos
                         }
                     }
@@ -54,8 +56,8 @@ struct ProfileView: View {
             }
             .background(AmbientBackground())
             .safeAreaInset(edge: .bottom) {
-                if photos.count >= 2 {
-                    Button("Export") { showExport = true }
+                if !photos.isEmpty {
+                    Button(photos.count >= 2 ? "Share your progress" : "Share week 1") { showExport = true }
                         .buttonStyle(.primary)
                         .padding(.horizontal, 16)
                         .padding(.bottom, 8)
@@ -71,8 +73,9 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showExport) {
-                ExportSheet(photos: photos).presentationDetents([.medium])
+                ShareProgressSheet(pose: pose)
             }
+            .sheet(item: $logMetric) { metric in LogBodySheet(metric: metric) }
             .sheet(item: $selectedPhoto) { photo in
                 PhotoDetailView(photo: photo)
             }
@@ -171,25 +174,32 @@ struct ProfileView: View {
         if let first = photos.first, let latest = photos.last {
             VStack(alignment: .leading, spacing: 10) {
                 Text("WEEK \(store.weekNumber(for: first)) VS LATEST").font(.brand(30))
-                HStack(spacing: 6) {
-                    labeled(first)
-                    labeled(latest)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 22))
+                CompareSlider(before: first, after: latest,
+                              beforeLabel: "Week \(store.weekNumber(for: first))",
+                              afterLabel: "Week \(store.weekNumber(for: latest))")
+                Text("Drag to compare")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryText)
+                    .frame(maxWidth: .infinity)
+                StatChangesRow(from: first.date, to: latest.date)
             }
             .padding(.horizontal, 16)
         }
     }
 
-    private func labeled(_ photo: ProgressPhoto) -> some View {
-        PhotoFrame(photo: photo, maxPixels: 800)
-            .overlay(alignment: .bottomLeading) {
-                Text("Week \(store.weekNumber(for: photo))")
-                    .font(.caption.weight(.semibold))
-                    .padding(.horizontal, 10).padding(.vertical, 6)
-                    .glassEffect(.regular, in: Capsule())
-                    .padding(8)
+    /// Weight first, then any measurement that has been logged.
+    private var trends: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("TRENDS").font(.brand(30))
+            BodyTrendCard(metric: .weight) { logMetric = .weight }
+            ForEach([BodyMetric.waist, .chest, .arms].filter { store.latestEntry(for: $0) != nil }) { metric in
+                BodyTrendCard(metric: metric) { logMetric = metric }
             }
+            if [BodyMetric.waist, .chest, .arms].allSatisfy({ store.latestEntry(for: $0) == nil }) {
+                MeasurementsRow { logMetric = $0 }
+            }
+        }
+        .padding(.horizontal, 16)
     }
 
     private var allPhotos: some View {
@@ -267,103 +277,4 @@ private struct PhotoDetailView: View {
             }
         }
     }
-}
-
-private struct ExportSheet: View {
-    let photos: [ProgressPhoto]
-
-    @Environment(ProgressStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
-    @State private var format = Format.video
-    @State private var isExporting = false
-    @State private var shareItem: ShareItem?
-    @State private var failed = false
-    @State private var lastURL: URL?
-
-    private enum Format: String, CaseIterable, Identifiable {
-        case video = "Video", image = "Side by side"
-        var id: String { rawValue }
-    }
-
-    private struct ShareItem: Identifiable {
-        let url: URL
-        var id: URL { url }
-    }
-
-    private var watermark: Binding<Bool> {
-        Binding { store.profile.watermark } set: { store.profile.watermark = $0 }
-    }
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 16) {
-                Picker("Format", selection: $format) {
-                    ForEach(Format.allCases) { option in Text(option.rawValue).tag(option) }
-                }
-                .pickerStyle(.segmented)
-                Toggle("Show \"made with Gainlapse\"", isOn: watermark)
-                    .padding(14)
-                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18))
-                Text("Nothing is shared until you choose where it goes.")
-                    .font(.footnote).foregroundStyle(Theme.secondaryText)
-                Spacer()
-                Button { Task { await export() } } label: {
-                    if isExporting { ProgressView().tint(.black) } else { Text("Create \(format == .video ? "video" : "image")") }
-                }
-                .buttonStyle(.primary)
-                .disabled(isExporting)
-            }
-            .padding(16)
-            .navigationTitle("Export")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Close")
-                }
-            }
-            .sheet(item: $shareItem, onDismiss: {
-                if let url = lastURL { try? FileManager.default.removeItem(at: url) }
-            }) { item in
-                ShareSheet(url: item.url).presentationDetents([.medium, .large])
-            }
-            .alert("Export didn't finish", isPresented: $failed) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Please try again.")
-            }
-        }
-    }
-
-    private func export() async {
-        isExporting = true
-        defer { isExporting = false }
-        let frames = photos.map {
-            TimelapseExporter.Frame(url: store.fileURL(for: $0), label: "WEEK \(store.weekNumber(for: $0))")
-        }
-        let label = store.profile.watermark
-        let chosen = format
-        do {
-            let url = try await Task.detached(priority: .userInitiated) { () throws -> URL in
-                switch chosen {
-                case .video:
-                    return try await TimelapseExporter.video(frames: frames, watermark: label)
-                case .image:
-                    return try TimelapseExporter.sideBySide(first: frames[0], latest: frames[frames.count - 1], watermark: label)
-                }
-            }.value
-            lastURL = url
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            shareItem = ShareItem(url: url)
-        } catch {
-            failed = true
-        }
-    }
-}
-
-private struct ShareSheet: UIViewControllerRepresentable {
-    let url: URL
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: [url], applicationActivities: nil)
-    }
-    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }

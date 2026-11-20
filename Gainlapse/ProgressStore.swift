@@ -3,6 +3,7 @@ import Foundation
 import ImageIO
 import Observation
 import UIKit
+import WidgetKit
 
 /// Everything the app remembers. Stored only on this device, using iOS file protection.
 @MainActor
@@ -11,9 +12,18 @@ final class ProgressStore {
     static let shared = ProgressStore()
 
     private(set) var photos: [ProgressPhoto] = []
+    private(set) var bodyEntries: [BodyEntry] = []
     var profile = UserProfile() { didSet { save() } }
-    /// Set when a reminder notification is tapped, so it opens the camera.
+    /// Set when a reminder notification or the widget is tapped, so it opens the camera.
     var cameraRequested = false
+    /// Set by the widget's link when no photo is due, so it opens the weigh-in sheet.
+    var weightLogRequested = false
+    /// Set when a recap notification is tapped.
+    var recapRequested = false
+    #if DEBUG
+    /// A screen to jump straight to, from a gainlapse://shot/<name> link in a screenshot run.
+    var debugShot: String?
+    #endif
 
     @ObservationIgnored private let cache = NSCache<NSString, UIImage>()
     @ObservationIgnored private let calendar = Calendar.current
@@ -28,12 +38,15 @@ final class ProgressStore {
     private struct SavedState: Codable {
         var profile: UserProfile
         var photos: [ProgressPhoto]
+        /// Optional so data saved before body logging still loads.
+        var bodyEntries: [BodyEntry]?
     }
 
     init() {
         clearExports()
         load()
         if let weeks = DebugFlags.demoWeeks, photos.isEmpty { seedDemo(weeks: weeks) }
+        updateWidget()
     }
 
     // MARK: Persistence
@@ -46,13 +59,60 @@ final class ProgressStore {
               let state = try? JSONDecoder().decode(SavedState.self, from: data) else { return }
         profile = state.profile
         photos = state.photos.sorted { $0.date < $1.date }
+        bodyEntries = (state.bodyEntries ?? []).sorted { $0.date < $1.date }
     }
 
     private func save() {
         guard !isLoading else { return }
-        let state = SavedState(profile: profile, photos: photos)
+        let state = SavedState(profile: profile, photos: photos, bodyEntries: bodyEntries)
         guard let data = try? JSONEncoder().encode(state) else { return }
         try? data.write(to: stateURL, options: [.atomic, .completeFileProtection])
+        updateWidget()
+    }
+
+    // MARK: Widget
+
+    /// Shares a few numbers (never photos) with the home screen widget, and refreshes it only when they change.
+    private func updateWidget() {
+        let snapshot = WidgetSnapshot(
+            weeks: photoWeekCount,
+            streak: streak,
+            nextPhoto: photos.isEmpty ? nil : nextCheckIn(),
+            photoDueNow: !photos.isEmpty && !hasPhotoThisWeek,
+            weight: latestEntry(for: .weight)?.value,
+            weightChange: trendChange(for: .weight),
+            usesMetric: usesMetric)
+        guard snapshot != WidgetSnapshot.load() else { return }
+        snapshot.save()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    // MARK: Recaps
+
+    nonisolated static let recapWeeks = [4, 8, 12, 26, 52]
+
+    /// The newest milestone reached that hasn't been opened or dismissed.
+    var pendingRecap: Int? {
+        let seen = Set(profile.seenRecaps ?? [])
+        return Self.recapWeeks.filter { $0 <= photoWeekCount && !seen.contains($0) }.max()
+    }
+
+    func markRecapSeen(_ weeks: Int) {
+        // Opening a later recap covers the earlier ones too.
+        let covered = Self.recapWeeks.filter { $0 <= weeks }
+        profile.seenRecaps = Array(Set((profile.seenRecaps ?? []) + covered)).sorted()
+        Reminders.cancelRecap()
+    }
+
+    nonisolated static func recapTitle(_ weeks: Int) -> String {
+        switch weeks {
+        case 4: "Your first month"
+        case 8: "Two months in"
+        case 12: "Three months in"
+        case 26: "Six months in"
+        case 52: "One year"
+        default: "\(weeks) weeks in"
+        }
     }
 
     // MARK: Photos
@@ -94,6 +154,126 @@ final class ProgressStore {
         for file in files where file.lastPathComponent.hasPrefix("Gainlapse-") {
             try? fileManager.removeItem(at: file)
         }
+    }
+
+    // MARK: Body stats
+
+    var usesMetric: Bool { profile.usesMetric ?? (Locale.current.measurementSystem == .metric) }
+
+    func entries(for metric: BodyMetric) -> [BodyEntry] { bodyEntries.filter { $0.metric == metric } }
+
+    func latestEntry(for metric: BodyMetric) -> BodyEntry? { bodyEntries.last { $0.metric == metric } }
+
+    /// Saves today's value. Logging the same thing twice in a day replaces the first one.
+    func logBody(_ metric: BodyMetric, value: Double, date: Date = .now) {
+        bodyEntries.removeAll { $0.metric == metric && calendar.isDate($0.date, inSameDayAs: date) }
+        bodyEntries.append(BodyEntry(id: UUID(), date: date, metric: metric, value: value))
+        bodyEntries.sort { $0.date < $1.date }
+        save()
+    }
+
+    func deleteBodyEntry(_ entry: BodyEntry) {
+        if let healthID = entry.healthID {
+            profile.ignoredHealthIDs = (profile.ignoredHealthIDs ?? []) + [healthID]
+        }
+        bodyEntries.removeAll { $0.id == entry.id }
+        save()
+    }
+
+    // MARK: Apple Health
+
+    /// Asks for read access to weight, then pulls in the last few months.
+    func connectHealth() async {
+        guard await HealthSync.requestAccess() else { return }
+        profile.healthSync = true
+        await syncHealth()
+    }
+
+    /// Adds Health weigh-ins Gainlapse hasn't seen. One per day: a weight logged here that day wins.
+    func syncHealth() async {
+        guard profile.healthSync == true else { return }
+        let lastImport = bodyEntries.last { $0.healthID != nil }?.date
+        let start = lastImport.map { $0.addingTimeInterval(-2 * 86_400) }
+            ?? calendar.date(byAdding: .day, value: -120, to: .now) ?? .now
+        let samples = await HealthSync.weights(since: start)
+        let known = Set(bodyEntries.compactMap(\.healthID) + (profile.ignoredHealthIDs ?? []))
+        var added = false
+        // The latest sample each day is the one kept.
+        for sample in samples.reversed() where !known.contains(sample.id) {
+            let sameDay = bodyEntries.contains {
+                $0.metric == .weight && calendar.isDate($0.date, inSameDayAs: sample.date)
+            }
+            guard !sameDay, BodyMetric.weight.isPlausible(sample.kilograms, metric: true) else { continue }
+            bodyEntries.append(BodyEntry(id: UUID(), date: sample.date, metric: .weight,
+                                         value: sample.kilograms, healthID: sample.id))
+            added = true
+        }
+        if added {
+            bodyEntries.sort { $0.date < $1.date }
+            save()
+        }
+    }
+
+    func updateBodyEntry(_ entry: BodyEntry, value: Double) {
+        guard let index = bodyEntries.firstIndex(where: { $0.id == entry.id }) else { return }
+        bodyEntries[index].value = value
+        save()
+    }
+
+    /// Each entry's 7-day average, which smooths out day-to-day water swings on the scale.
+    func trend(for metric: BodyMetric) -> [(date: Date, value: Double)] {
+        let all = entries(for: metric)
+        return all.map { entry in
+            let start = entry.date.addingTimeInterval(-7 * 86_400)
+            let window = all.filter { $0.date > start && $0.date <= entry.date }
+            return (entry.date, window.map(\.value).reduce(0, +) / Double(max(window.count, 1)))
+        }
+    }
+
+    /// Change from the first to the latest smoothed value, for weight. Measurements use the raw values.
+    func trendChange(for metric: BodyMetric) -> Double? {
+        guard metric == .weight else { return totalChange(for: metric) }
+        let points = trend(for: metric)
+        guard let first = entries(for: metric).first, let last = points.last, points.count > 1 else { return nil }
+        return last.value - first.value
+    }
+
+    var hasLoggedWeightToday: Bool {
+        bodyEntries.contains { $0.metric == .weight && calendar.isDateInToday($0.date) }
+    }
+
+    /// Change from the first entry to the latest, in stored units.
+    func totalChange(for metric: BodyMetric) -> Double? {
+        let all = entries(for: metric)
+        guard let first = all.first, let last = all.last, all.count > 1 else { return nil }
+        return last.value - first.value
+    }
+
+    /// Change between the values nearest two dates, used to put a number beside a photo comparison.
+    /// `typedOnly` leaves out weights read from Apple Health, for anything that leaves the phone.
+    func change(for metric: BodyMetric, from start: Date, to end: Date, typedOnly: Bool = false) -> Double? {
+        let all = entries(for: metric).filter { !typedOnly || $0.healthID == nil }
+        guard all.count > 1 else { return nil }
+        func nearest(_ date: Date) -> BodyEntry? {
+            all.min { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) }
+        }
+        guard let first = nearest(start), let last = nearest(end), first.id != last.id,
+              abs(first.date.timeIntervalSince(start)) < 4 * 86_400,
+              abs(last.date.timeIntervalSince(end)) < 4 * 86_400 else { return nil }
+        return last.value - first.value
+    }
+
+    /// Days in a row ending today or yesterday with a weight logged.
+    var weightLogStreak: Int {
+        let days = Set(entries(for: .weight).map { calendar.startOfDay(for: $0.date) })
+        var day = calendar.startOfDay(for: .now)
+        if !days.contains(day) { day = calendar.date(byAdding: .day, value: -1, to: day) ?? day }
+        var count = 0
+        while days.contains(day) {
+            count += 1
+            day = calendar.date(byAdding: .day, value: -1, to: day) ?? day
+        }
+        return count
     }
 
     // MARK: Draft photo
@@ -310,6 +490,7 @@ final class ProgressStore {
     /// Puts a test build back to a first launch.
     func startOver() {
         deleteAllPhotos()
+        bodyEntries = []
         profile = UserProfile()
     }
 
@@ -323,19 +504,35 @@ final class ProgressStore {
     }
     #endif
 
+    private static func numberWord(_ number: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .spellOut
+        return (formatter.string(from: number as NSNumber) ?? "\(number)").capitalized
+    }
+
     private func seedDemo(weeks: Int) {
         #if DEBUG
         profile.goal = .bulk
         profile.onboardingDone = true
         for index in 0..<weeks {
-            let date = calendar.date(byAdding: .day, value: -7 * (weeks - index), to: .now) ?? .now
-            let image = SyntheticPhoto.make(week: index, pose: .front)
+            // A screenshot run ends two days ago, so this week's photo and check-in are already done.
+            let daysBack = DebugFlags.storeShots ? 7 * (weeks - 1 - index) + 2 : 7 * (weeks - index)
+            let date = calendar.date(byAdding: .day, value: -daysBack, to: .now) ?? .now
+            let provided = DebugFlags.photoDirectory.flatMap { UIImage(contentsOfFile: "\($0)/\(index + 1).jpg") }
+            let image = provided ?? SyntheticPhoto.make(week: index, pose: .front)
             guard let photo = try? addPhoto(image, pose: .front, date: date) else { continue }
+            if weeks == 1, DebugFlags.storeShots {
+                // A single sample photo shows the very first check-in.
+                setCheckIn(CheckIn(feedback: "Welcome to week 1. This photo is your baseline, so every later week has something honest to be measured against. The light is soft and even and you're centered in the frame, which will make next week's comparison a fair one.",
+                                   focusTip: "Take next week's photo in the same spot, at the same time of day.",
+                                   createdAt: date),
+                           for: photo)
+            }
             if index > 0 {
                 // -cleanPaywall is the App Store screenshot run, so it shows a representative check-in.
-                let forScreenshots = ProcessInfo.processInfo.arguments.contains("-cleanPaywall")
+                let forScreenshots = DebugFlags.storeShots
                 setCheckIn(CheckIn(feedback: forScreenshots
-                                    ? "Your shoulders are carrying more width than in your earlier photo, and your arms look fuller from this angle. The light is close to last time, so this comparison is a fair one. Eight weeks of showing up is what makes this visible."
+                                    ? "Your shoulders are carrying more width than in your earlier photo, and your arms look fuller from this angle. The light is close to last time, so this comparison is a fair one. \(Self.numberWord(weeks)) weeks of showing up is what makes this visible."
                                     : "Sample feedback from a test build, not a real check-in.",
                                    focusTip: forScreenshots
                                     ? "Add one more set of overhead press this week."
@@ -344,6 +541,21 @@ final class ProgressStore {
                            for: photo)
             }
         }
+        // A gently rising weight logged most days, and measurements every other week, for a bulking demo.
+        let days = weeks * 7
+        for day in stride(from: days, through: 0, by: -1) where day % 3 != 1 {
+            let date = calendar.date(byAdding: .day, value: -day, to: .now) ?? .now
+            let progress = Double(days - day) / Double(max(days, 1))
+            let wobble = sin(Double(day) * 1.7) * 0.35
+            bodyEntries.append(BodyEntry(id: UUID(), date: date, metric: .weight, value: 78 + progress * 2.6 + wobble))
+            if day % 14 == 0 {
+                bodyEntries.append(BodyEntry(id: UUID(), date: date, metric: .waist, value: 82 + progress * 0.8))
+                bodyEntries.append(BodyEntry(id: UUID(), date: date, metric: .chest, value: 101 + progress * 3))
+                bodyEntries.append(BodyEntry(id: UUID(), date: date, metric: .arms, value: 35 + progress * 1.4))
+            }
+        }
+        bodyEntries.sort { $0.date < $1.date }
+        save()
         #endif
     }
 }
@@ -380,7 +592,7 @@ enum SyntheticPhoto {
             let waist = (pose == .side ? 110 : 150) + growth * 0.3
             let cx = size.width / 2
             // The App Store screenshot run: an illustrated figure, not a photo of a real person.
-            if ProcessInfo.processInfo.arguments.contains("-cleanPaywall") {
+            if DebugFlags.storeShots {
                 let w = 118 + growth * 0.7
                 let body = UIBezierPath()
                 body.move(to: CGPoint(x: cx - 42, y: 300))

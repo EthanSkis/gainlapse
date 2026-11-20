@@ -12,13 +12,19 @@ struct CaptureFlow: View {
     @State private var captured: UIImage?
     @State private var pose: Pose = .front
     @State private var savedPhoto: ProgressPhoto?
+    @State private var showsStartingStats = false
     @State private var saveFailed = false
     @State private var confirmReplace = false
     @State private var retakeRequested = false
 
     var body: some View {
         Group {
-            if let savedPhoto {
+            if showsStartingStats {
+                StartingStatsView {
+                    store.profile.onboardingDone = true
+                    dismiss()
+                }
+            } else if let savedPhoto {
                 NavigationStack {
                     CheckInView(photo: savedPhoto) { retakePose in
                         pose = retakePose
@@ -104,8 +110,7 @@ struct CaptureFlow: View {
             store.clearDraft()
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             if isOnboarding {
-                store.profile.onboardingDone = true
-                dismiss()
+                withAnimation(.smooth) { showsStartingStats = true }
             } else {
                 savedPhoto = photo
             }

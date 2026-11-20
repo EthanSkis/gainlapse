@@ -63,6 +63,7 @@ struct PaywallView: View {
                         benefit("A weekly photo that lines up with the last", symbol: "person.crop.rectangle.stack.fill")
                         benefit("Honest AI check-ins on what's changing", symbol: "text.bubble.fill")
                         benefit("A timelapse that builds itself", symbol: "play.square.stack.fill")
+                        benefit("Weight and measurements charted beside your photos", symbol: "chart.line.uptrend.xyaxis")
                     }
                     .font(.subheadline.weight(.medium))
                     if plans.isEmpty {
@@ -109,6 +110,11 @@ struct PaywallView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Stamp(text: isFirstWeek ? "Week 1 saved" : "Your photos are safe", color: Theme.accent)
                     Barbell(plates: store.photoWeekCount, height: 54).frame(width: 150)
+                    if let weight = store.latestEntry(for: .weight) {
+                        Text("Starting at \(BodyMetric.weight.format(weight.value, metric: store.usesMetric))")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
                 }
             }
             Text(isFirstWeek ? "KEEP YOUR TIMELAPSE GOING" : "PICK UP WHERE YOU LEFT OFF")
@@ -164,7 +170,7 @@ struct PaywallView: View {
                 .font(.footnote).foregroundStyle(Theme.secondaryText)
                 .multilineTextAlignment(.center)
             #if DEBUG
-            if selectedPlan?.product == nil && !ProcessInfo.processInfo.arguments.contains("-cleanPaywall") {
+            if selectedPlan?.product == nil && !DebugFlags.storeShots {
                 Text("Test build: no real charge").font(.caption2).foregroundStyle(Theme.secondaryText)
             }
             #endif
