@@ -19,6 +19,8 @@
 	<string>Gainlapse uses the camera to take your weekly progress photo.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Gainlapse reads your body weight from Apple Health to chart it beside your progress photos. It stays on your iPhone.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Gainlapse only reads your body weight from Apple Health. It does not save anything to Health.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Gainlapse saves a timelapse to your photos only when you export one.</string>
 	<key>UILaunchScreen</key>
