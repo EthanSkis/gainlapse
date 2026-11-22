@@ -46,6 +46,13 @@ final class ProgressStore {
         clearExports()
         load()
         if let weeks = DebugFlags.demoWeeks, photos.isEmpty { seedDemo(weeks: weeks) }
+        #if DEBUG
+        // Test builds launched with -resetAILimit get their AI tries back, keeping every photo.
+        if ProcessInfo.processInfo.arguments.contains("-resetAILimit") {
+            profile.aiRequestDates = nil
+            save() // didSet doesn't run inside init
+        }
+        #endif
         updateWidget()
     }
 
@@ -465,7 +472,7 @@ final class ProgressStore {
     }
 
     /// Caps AI answers, including unusable-photo and declined replies. Connection failures don't count.
-    var canRequestAI: Bool { recentAIRequests.count < 3 }
+    var canRequestAI: Bool { Subscriptions.isTestBuild || recentAIRequests.count < 3 }
 
     func recordAIRequest() {
         profile.aiRequestDates = recentAIRequests + [.now]

@@ -13,10 +13,21 @@ final class Subscriptions {
     /// Left empty, RevenueCat stays off and the app works exactly as before.
     static let revenueCatAPIKey = "appl_jxOPfxfrpeZuBUQmdprSaOVPOVB"
 
+    /// Local test builds (Debug, or anything in the simulator) stay out of RevenueCat, so reinstalls
+    /// don't show up as customers. Launch with -revenueCat to turn it on for a local test.
+    private static var revenueCatEnabledHere: Bool {
+        if ProcessInfo.processInfo.arguments.contains("-revenueCat") { return true }
+        #if DEBUG || targetEnvironment(simulator)
+        return false
+        #else
+        return true
+        #endif
+    }
+
     /// RevenueCat watches purchases the app completes itself, so the paywall, the entitlement check
     /// and the server's signed-transaction check all keep running on StoreKit as before.
     static func configureRevenueCat() {
-        guard !revenueCatAPIKey.isEmpty, !Purchases.isConfigured else { return }
+        guard !revenueCatAPIKey.isEmpty, !Purchases.isConfigured, revenueCatEnabledHere else { return }
         #if DEBUG
         Purchases.logLevel = .debug
         #endif
@@ -52,9 +63,27 @@ final class Subscriptions {
     /// The real check still runs on every launch and corrects it.
     private static let lastKnownKey = "subscription.lastKnownEntitled"
 
+    /// True for Debug builds and for TestFlight or Xcode installs, which buy with sandbox accounts.
+    /// Test builds skip the AI check-in limits; App Store installs never do.
+    nonisolated(unsafe) static var isTestBuild: Bool = {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }()
+
     func start() async {
         Self.configureRevenueCat()
-        if UserDefaults.standard.bool(forKey: Self.lastKnownKey) {
+        if case .verified(let app)? = try? await AppTransaction.shared, app.environment != .production {
+            Self.isTestBuild = true
+        }
+        #if DEBUG
+        let forcesFree = ProcessInfo.processInfo.arguments.contains("-forceFree")
+        #else
+        let forcesFree = false
+        #endif
+        if !forcesFree, UserDefaults.standard.bool(forKey: Self.lastKnownKey) {
             isEntitled = true
             hasChecked = true
         }
@@ -113,6 +142,8 @@ final class Subscriptions {
         }
         #if DEBUG
         if UserDefaults.standard.bool(forKey: Self.previewKey) { active = true }
+        // Test builds launched with -forceFree act like a free user, even with a test subscription on the device.
+        if ProcessInfo.processInfo.arguments.contains("-forceFree") { active = false }
         #endif
         isEntitled = active
         UserDefaults.standard.set(active, forKey: Self.lastKnownKey)

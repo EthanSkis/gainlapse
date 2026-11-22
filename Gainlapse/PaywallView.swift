@@ -1,8 +1,23 @@
 import StoreKit
 import SwiftUI
 
+/// Why the paywall is showing, which sets its headline.
+enum PaywallContext {
+    /// Once, right after onboarding.
+    case intro
+    /// When the first month's timelapse is ready.
+    case timelapseReady
+    /// From a locked feature.
+    case feature
+}
+
 struct PaywallView: View {
+    var context: PaywallContext = .feature
+    /// Called when the user closes it without buying. Sheets are closed with dismiss instead.
+    var onClose: (() -> Void)?
+
     @Environment(ProgressStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
     @Environment(Subscriptions.self) private var subscriptions
     @Environment(\.openURL) private var openURL
     @State private var selectedID = Subscriptions.annualID
@@ -53,6 +68,26 @@ struct PaywallView: View {
     private var selectedPlan: Plan? { plans.first { $0.id == selectedID } }
     private var isFirstWeek: Bool { store.photos.count <= 1 }
 
+    private var stampText: String {
+        switch context {
+        case .intro: isFirstWeek ? "Week 1 locked in" : "Your photos are safe"
+        case .timelapseReady: "\(store.photoWeekCount) weeks of photos"
+        case .feature: "Your photos are always free"
+        }
+    }
+
+    private var headline: String {
+        switch context {
+        case .intro: isFirstWeek ? "SEE EVERY GAIN, NOT JUST PHOTOS" : "PICK UP WHERE YOU LEFT OFF"
+        case .timelapseReady: "YOUR FIRST TIMELAPSE IS READY"
+        case .feature: "GET THE FULL PICTURE"
+        }
+    }
+
+    private func close() {
+        if let onClose { onClose() } else { dismiss() }
+    }
+
     var body: some View {
         ZStack {
             AmbientBackground()
@@ -60,10 +95,10 @@ struct PaywallView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     hero
                     VStack(alignment: .leading, spacing: 12) {
-                        benefit("A weekly photo that lines up with the last", symbol: "person.crop.rectangle.stack.fill")
+                        benefit("Your full-quality timelapse, without the watermark", symbol: "play.square.stack.fill")
                         benefit("Honest AI check-ins on what's changing", symbol: "text.bubble.fill")
-                        benefit("A timelapse that builds itself", symbol: "play.square.stack.fill")
-                        benefit("Weight and measurements, charted", symbol: "chart.line.uptrend.xyaxis")
+                        benefit("Week 1 next to now, side by side", symbol: "rectangle.split.2x1.fill")
+                        benefit("Weekly photos stay free, always", symbol: "camera.fill")
                     }
                     .font(.subheadline.weight(.medium))
                     if plans.isEmpty {
@@ -108,7 +143,7 @@ struct PaywallView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Stamp(text: isFirstWeek ? "Week 1 saved" : "Your photos are safe", color: Theme.accent)
+                    Stamp(text: stampText, color: Theme.accent)
                     Barbell(plates: store.photoWeekCount, height: 54).frame(width: 150)
                     if let weight = store.latestEntry(for: .weight) {
                         Text("Starting at \(BodyMetric.weight.format(weight.value, metric: store.usesMetric))")
@@ -116,9 +151,13 @@ struct PaywallView: View {
                             .foregroundStyle(Theme.secondaryText)
                     }
                 }
+                Spacer(minLength: 0)
+                GlassIconButton(symbol: "xmark", label: "Close") { close() }
+                    .frame(maxHeight: .infinity, alignment: .top)
             }
+            .fixedSize(horizontal: false, vertical: true)
             // Two lines at most, so both plans fit above the button on smaller iPhones.
-            Text(isFirstWeek ? "KEEP YOUR TIMELAPSE GOING" : "PICK UP WHERE YOU LEFT OFF")
+            Text(headline)
                 .font(.brand(60))
                 .lineLimit(2)
                 .minimumScaleFactor(0.6)
@@ -206,11 +245,12 @@ struct PaywallView: View {
         guard let product = plan.product else {
             #if DEBUG
             subscriptions.grantPreviewEntitlement()
+            if onClose == nil { dismiss() }
             #endif
             return
         }
         do {
-            _ = try await subscriptions.purchase(product)
+            if try await subscriptions.purchase(product), onClose == nil { dismiss() }
         } catch {
             message = "Your purchase didn't go through, and you weren't charged. Please try again."
         }
@@ -221,7 +261,11 @@ struct PaywallView: View {
         defer { isWorking = false }
         do {
             try await subscriptions.restore()
-            if !subscriptions.isEntitled { message = "No active subscription was found for this Apple Account." }
+            if !subscriptions.isEntitled {
+                message = "No active subscription was found for this Apple Account."
+            } else if onClose == nil {
+                dismiss()
+            }
         } catch {
             message = "Purchases couldn't be restored. Check your connection and try again."
         }

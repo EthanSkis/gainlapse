@@ -26,7 +26,7 @@ No feed, no followers, no public profile. No account, no ads, no tracking. Photo
 AI check-ins are optional and the app asks first. When they're on, your photos go to our server and to Anthropic's Claude AI to write your feedback, along with whether the weight you typed in went up, down or stayed the same, never the number and never anything from Apple Health. They aren't stored on the Gainlapse server.
 
 SUBSCRIPTION
-Gainlapse requires a subscription: weekly or annual, each with a 7-day free trial for new subscribers. Payment is charged to your Apple Account when the trial ends. Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period. Manage or cancel any time in your Apple Account settings.
+Weekly photos, reminders and your photo history are free. A subscription unlocks AI check-ins, side-by-side comparisons and full-quality timelapse exports without the watermark: weekly or annual, each with a 7-day free trial for new subscribers. Payment is charged to your Apple Account when the trial ends. Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period. Manage or cancel any time in your Apple Account settings.
 
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://gainlapse.com/privacy

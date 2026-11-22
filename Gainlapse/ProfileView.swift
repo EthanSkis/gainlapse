@@ -6,6 +6,7 @@ struct ProfileView: View {
     let scrollToTop: Int
 
     @Environment(ProgressStore.self) private var store
+    @Environment(Subscriptions.self) private var subscriptions
     @State private var pose: Pose = .front
     @State private var frames: [UIImage] = []
     @State private var index = 0
@@ -174,13 +175,17 @@ struct ProfileView: View {
         if let first = photos.first, let latest = photos.last {
             VStack(alignment: .leading, spacing: 10) {
                 Text("WEEK \(store.weekNumber(for: first)) VS LATEST").font(.brand(30))
-                CompareSlider(before: first, after: latest,
-                              beforeLabel: "Week \(store.weekNumber(for: first))",
-                              afterLabel: "Week \(store.weekNumber(for: latest))")
-                Text("Drag to compare")
-                    .font(.footnote)
-                    .foregroundStyle(Theme.secondaryText)
-                    .frame(maxWidth: .infinity)
+                if subscriptions.isEntitled {
+                    CompareSlider(before: first, after: latest,
+                                  beforeLabel: "Week \(store.weekNumber(for: first))",
+                                  afterLabel: "Week \(store.weekNumber(for: latest))")
+                    Text("Drag to compare")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.secondaryText)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    LockedCompare(before: first, after: latest)
+                }
                 StatChangesRow(from: first.date, to: latest.date)
             }
             .padding(.horizontal, 16)

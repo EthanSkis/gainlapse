@@ -6,6 +6,7 @@ struct CheckInView: View {
     var onRetake: (Pose) -> Void = { _ in }
 
     @Environment(ProgressStore.self) private var store
+    @Environment(Subscriptions.self) private var subscriptions
     @Environment(\.dismiss) private var dismiss
     @State private var phase: Phase = .idle
     @State private var didFinish = false
@@ -53,7 +54,10 @@ struct CheckInView: View {
     }
 
     @ViewBuilder private var photos: some View {
-        if let comparison {
+        if let comparison, !subscriptions.isEntitled {
+            LockedCompare(before: comparison, after: current)
+                .frame(maxHeight: 300)
+        } else if let comparison {
             VStack(spacing: 10) {
                 CompareSlider(before: comparison, after: current,
                               beforeLabel: "Week \(store.weekNumber(for: comparison))", afterLabel: "This week")
@@ -87,6 +91,10 @@ struct CheckInView: View {
         } else if !canCheckIn {
             card(title: "Baseline saved", symbol: "flag.fill",
                  text: "This is the starting point for this pose. Your check-in compares against it next week.")
+        } else if !subscriptions.isEntitled {
+            LockedFeatureCard(title: "AI check-in",
+                              detail: "Your photo is saved. Subscribe for honest feedback on what's changing each week.",
+                              symbol: "text.bubble.fill")
         } else if store.profile.aiConsent == nil {
             consent
         } else if store.profile.aiConsent == false {
@@ -148,7 +156,7 @@ struct CheckInView: View {
 
     @ViewBuilder private var footer: some View {
         VStack(spacing: 8) {
-            if current.checkIn == nil, canCheckIn, store.profile.aiConsent == nil {
+            if current.checkIn == nil, canCheckIn, subscriptions.isEntitled, store.profile.aiConsent == nil {
                 Link("Read the privacy policy", destination: Backend.privacyURL)
                     .font(.footnote)
                     .frame(minHeight: 32)
@@ -196,7 +204,7 @@ struct CheckInView: View {
     }
 
     private func startIfAllowed() async {
-        guard current.checkIn == nil, canCheckIn, store.profile.aiConsent == true else { return }
+        guard current.checkIn == nil, canCheckIn, subscriptions.isEntitled, store.profile.aiConsent == true else { return }
         await run()
     }
 

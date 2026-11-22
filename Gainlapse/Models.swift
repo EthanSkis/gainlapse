@@ -18,7 +18,7 @@ enum Goal: String, Codable, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .bulk: "Put on size and see it build"
-        case .tone: "Track glute and toning progress"
+        case .tone: "Get leaner and more defined"
         case .justStarted: "Capture your first months at the gym"
         }
     }
@@ -83,4 +83,6 @@ struct UserProfile: Codable {
     var ignoredHealthIDs: [UUID]?
     /// Week counts whose recap has been seen or dismissed.
     var seenRecaps: [Int]?
+    /// True once the paywall after onboarding has been shown and closed, so it doesn't block the app again.
+    var seenIntroPaywall: Bool?
 }

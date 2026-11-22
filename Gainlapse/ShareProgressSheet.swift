@@ -6,7 +6,9 @@ struct ShareProgressSheet: View {
     let pose: Pose
 
     @Environment(ProgressStore.self) private var store
+    @Environment(Subscriptions.self) private var subscriptions
     @Environment(\.dismiss) private var dismiss
+    @State private var showPaywall = false
     @State private var format = Format.video
     @State private var preview: UIImage?
     @State private var isExporting = false
@@ -32,11 +34,14 @@ struct ShareProgressSheet: View {
         photos.map { TimelapseExporter.Frame(url: store.fileURL(for: $0), week: store.weekNumber(for: $0)) }
     }
 
+    /// Free exports always carry the Gainlapse branding; subscribers can turn it off.
+    private var isBranded: Bool { store.profile.watermark || !subscriptions.isEntitled }
+
     private var branded: Binding<Bool> {
-        Binding { store.profile.watermark } set: { store.profile.watermark = $0 }
+        Binding { isBranded } set: { store.profile.watermark = $0 }
     }
 
-    private var previewKey: String { "\(makesVideo)-\(store.profile.watermark)-\(photos.map(\.filename).joined())" }
+    private var previewKey: String { "\(makesVideo)-\(isBranded)-\(photos.map(\.filename).joined())" }
 
     var body: some View {
         NavigationStack {
@@ -48,10 +53,26 @@ struct ShareProgressSheet: View {
                     .pickerStyle(.segmented)
                 }
                 previewCard
-                Toggle("Show Gainlapse branding", isOn: branded)
-                    .font(.subheadline.weight(.medium))
-                    .padding(.horizontal, 14).padding(.vertical, 10)
-                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18))
+                if subscriptions.isEntitled {
+                    Toggle("Show Gainlapse branding", isOn: branded)
+                        .font(.subheadline.weight(.medium))
+                        .padding(.horizontal, 14).padding(.vertical, 10)
+                        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18))
+                } else {
+                    Button { showPaywall = true } label: {
+                        HStack {
+                            Label("Remove branding, full quality", systemImage: "lock.fill")
+                            Spacer()
+                            Text("Unlock").foregroundStyle(Theme.accent)
+                        }
+                        .font(.subheadline.weight(.medium))
+                        .padding(.horizontal, 14)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 18))
+                }
                 Text("Nothing is shared until you choose where it goes.")
                     .font(.footnote).foregroundStyle(Theme.secondaryText)
                 Button { Task { await export() } } label: {
@@ -70,6 +91,7 @@ struct ShareProgressSheet: View {
                 }
             }
             .task(id: previewKey) { await loadPreview() }
+            .sheet(isPresented: $showPaywall) { PaywallView(context: .feature) }
             .sensoryFeedback(.selection, trigger: format)
             .sheet(item: $shareItem, onDismiss: {
                 if let url = lastURL { try? FileManager.default.removeItem(at: url) }
@@ -115,7 +137,7 @@ struct ShareProgressSheet: View {
     private func loadPreview() async {
         let frames = frames
         let video = makesVideo
-        let isBranded = store.profile.watermark
+        let isBranded = isBranded
         let image = await Task.detached(priority: .userInitiated) {
             TimelapseExporter.preview(frames: frames, video: video, branded: isBranded)
         }.value
@@ -127,10 +149,11 @@ struct ShareProgressSheet: View {
         defer { isExporting = false }
         let frames = frames
         let video = makesVideo
-        let isBranded = store.profile.watermark
+        let isBranded = isBranded
+        let fullQuality = subscriptions.isEntitled
         do {
             let url = try await Task.detached(priority: .userInitiated) { () throws -> URL in
-                video ? try await TimelapseExporter.video(frames: frames, branded: isBranded)
+                video ? try await TimelapseExporter.video(frames: frames, branded: isBranded, fullQuality: fullQuality)
                       : try TimelapseExporter.still(frames: frames, branded: isBranded)
             }.value
             lastURL = url

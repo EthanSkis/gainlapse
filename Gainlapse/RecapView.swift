@@ -5,8 +5,13 @@ struct RecapView: View {
     let weeks: Int
 
     @Environment(ProgressStore.self) private var store
+    @Environment(Subscriptions.self) private var subscriptions
     @Environment(\.dismiss) private var dismiss
     @State private var showShare = false
+    @State private var showPaywall = false
+
+    /// The first recap is the moment the first timelapse is ready, so free users are offered the full one here.
+    private var offersUpgrade: Bool { !subscriptions.isEntitled }
 
     /// The pose with the most photos makes the fairest comparison.
     private var pose: Pose {
@@ -25,7 +30,10 @@ struct RecapView: View {
                             .font(.brand(64))
                             .accessibilityAddTraits(.isHeader)
                     }
-                    if let first = photos.first, let latest = photos.last, first.id != latest.id {
+                    if offersUpgrade, let first = photos.first, let latest = photos.last, first.id != latest.id {
+                        LockedCompare(before: first, after: latest)
+                        stats(from: first.date, to: latest.date)
+                    } else if let first = photos.first, let latest = photos.last, first.id != latest.id {
                         CompareSlider(before: first, after: latest,
                                       beforeLabel: "Week \(store.weekNumber(for: first))",
                                       afterLabel: "Week \(store.weekNumber(for: latest))")
@@ -50,10 +58,28 @@ struct RecapView: View {
             }
             .background(AmbientBackground())
             .safeAreaInset(edge: .bottom) {
-                Button("Share your recap") { showShare = true }
-                    .buttonStyle(.primary)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
+                VStack(spacing: 8) {
+                    if offersUpgrade {
+                        Button("Unlock your full timelapse") { showPaywall = true }
+                            .buttonStyle(.primary)
+                        Button("Share the free version") { showShare = true }
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Theme.secondaryText)
+                            .frame(minHeight: 36)
+                    } else {
+                        Button("Share your recap") { showShare = true }
+                            .buttonStyle(.primary)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 8)
+                // Cards scrolling underneath fade out instead of showing through the buttons.
+                .background {
+                    LinearGradient(colors: [Theme.background.opacity(0), Theme.background.opacity(0.95)],
+                                   startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.35))
+                        .ignoresSafeArea()
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -62,7 +88,13 @@ struct RecapView: View {
                 }
             }
             .sheet(isPresented: $showShare) { ShareProgressSheet(pose: pose) }
-            .onAppear { store.markRecapSeen(weeks) }
+            .sheet(isPresented: $showPaywall) { PaywallView(context: .timelapseReady) }
+            .onAppear {
+                let isFirstView = !(store.profile.seenRecaps ?? []).contains(weeks)
+                store.markRecapSeen(weeks)
+                // The first time the first timelapse is ready, the offer opens on its own. After that it waits for a tap.
+                if isFirstView && offersUpgrade && weeks == ProgressStore.recapWeeks[0] { showPaywall = true }
+            }
             .sensoryFeedback(.success, trigger: weeks)
         }
     }

@@ -162,9 +162,12 @@ struct HomeView: View {
     }
 
     private func recapCard(_ weeks: Int) -> some View {
-        infoCard("Recap ready") {
+        let isFirstTimelapse = !subscriptions.isEntitled && weeks == ProgressStore.recapWeeks[0]
+        return infoCard(isFirstTimelapse ? "Your first timelapse is ready" : "Recap ready") {
             HStack(alignment: .top) {
-                Text("\(ProgressStore.recapTitle(weeks)). See week 1 next to now, and what changed.")
+                Text(isFirstTimelapse
+                     ? "A month of photos, put together. See week 1 next to now, and what changed."
+                     : "\(ProgressStore.recapTitle(weeks)). See week 1 next to now, and what changed.")
                     .font(.body.weight(.medium))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
@@ -174,7 +177,7 @@ struct HomeView: View {
                 }
                 .accessibilityLabel("Dismiss recap")
             }
-            Button("See your recap") { openRecap = RecapID(weeks: weeks) }
+            Button(isFirstTimelapse ? "See your timelapse" : "See your recap") { openRecap = RecapID(weeks: weeks) }
                 .font(.subheadline.weight(.bold))
                 .frame(minHeight: 44)
         }

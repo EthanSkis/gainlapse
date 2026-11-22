@@ -50,7 +50,7 @@ struct OnboardingView: View {
     @State private var loadedPlates = 0
     @GestureState private var backDrag: CGFloat = 0
 
-    private let pageCount = 4
+    private let pageCount = 5
     private var step: Int { store.profile.onboardingStep }
     private var pageAnimation: Animation { .spring(response: 0.55, dampingFraction: 0.88) }
 
@@ -174,7 +174,7 @@ struct OnboardingView: View {
     /// One plate loads onto the bar with each step.
     private var stepPlates: some View {
         HStack(spacing: 4) {
-            ForEach(1...3, id: \.self) { index in
+            ForEach(1...(pageCount - 1), id: \.self) { index in
                 let height = 34 - CGFloat(index - 1) * 7
                 ZStack {
                     RoundedRectangle(cornerRadius: 3)
@@ -189,7 +189,7 @@ struct OnboardingView: View {
             }
         }
         .accessibilityElement()
-        .accessibilityLabel("Step \(step) of 3")
+        .accessibilityLabel("Step \(step) of \(pageCount - 1)")
     }
 
     @ViewBuilder private func page(_ index: Int) -> some View {
@@ -198,7 +198,8 @@ struct OnboardingView: View {
                 switch index {
                 case 0: welcome
                 case 1: goal
-                case 2: schedule
+                case 2: sample
+                case 3: schedule
                 default: firstPhoto
                 }
             }
@@ -288,24 +289,44 @@ struct OnboardingView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
+    private var sampleSubtitle: String {
+        switch store.profile.goal {
+        case .bulk: "Changes come too slowly to notice in the mirror. One photo a week makes them obvious."
+        case .tone: "Toning shows up in small changes week to week. Lined up, they add up."
+        default: "Your first months change the most. One photo a week captures all of it."
+        }
+    }
+
+    private var sample: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            title("HERE'S WHAT 12 WEEKS LOOKS LIKE").modifier(entrance(0, on: 2))
+            Text(sampleSubtitle)
+                .foregroundStyle(Theme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .modifier(entrance(1, on: 2))
+            SampleTimelapse()
+                .modifier(entrance(2, on: 2))
+        }
+    }
+
     private var schedule: some View {
         VStack(alignment: .leading, spacing: 14) {
-            title("WHEN'S PHOTO DAY?").modifier(entrance(0, on: 2))
+            title("WHEN'S PHOTO DAY?").modifier(entrance(0, on: 3))
             Text("The same time each week keeps the light matched and the habit easy.")
                 .foregroundStyle(Theme.secondaryText)
-                .modifier(entrance(1, on: 2))
+                .modifier(entrance(1, on: 3))
             ScheduleControls(usesWheel: true)
                 .padding(.top, 4)
-                .modifier(entrance(2, on: 2))
+                .modifier(entrance(2, on: 3))
         }
     }
 
     private var firstPhoto: some View {
         VStack(alignment: .leading, spacing: 18) {
-            title("TAKE YOUR WEEK 1 PHOTO").modifier(entrance(0, on: 3))
-            tip("Prop your phone up and use the timer", symbol: "timer").modifier(entrance(1, on: 3))
-            tip("Pick a spot with good light you can use every week", symbol: "sun.max.fill").modifier(entrance(2, on: 3))
-            tip("Your photos are private and never public", symbol: "lock.fill").modifier(entrance(3, on: 3))
+            title("TAKE YOUR WEEK 1 PHOTO").modifier(entrance(0, on: 4))
+            tip("Prop your phone up and use the timer", symbol: "timer").modifier(entrance(1, on: 4))
+            tip("Pick a spot with good light you can use every week", symbol: "sun.max.fill").modifier(entrance(2, on: 4))
+            tip("Your photos are private and never public", symbol: "lock.fill").modifier(entrance(3, on: 4))
         }
     }
 
@@ -319,21 +340,21 @@ struct OnboardingView: View {
     private var buttonTitle: String {
         switch step {
         case 0: "Get started"
-        case 1, 2: "Continue"
+        case 1, 2, 3: "Continue"
         default: "Take first photo"
         }
     }
 
     private func primaryAction() {
         switch step {
-        case 0, 1:
+        case 0, 1, 2:
             move(to: step + 1)
-        case 2:
+        case 3:
             Task {
                 isSchedulingReminder = true
                 await Reminders.requestAndSchedule(dates: store.upcomingCheckIns())
                 isSchedulingReminder = false
-                move(to: 3)
+                move(to: 4)
             }
         default:
             showCamera = true

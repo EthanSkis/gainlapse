@@ -24,14 +24,14 @@ struct StartingStatsView: View {
             AmbientBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Stamp(text: "Week 1 photo saved", color: Theme.accent)
+                    Stamp(text: "Week 1 locked in", color: Theme.accent)
                     // Kept to two lines so the weight field stays in view above the keyboard on smaller iPhones.
                     Text("LOG YOUR STARTING POINT")
                         .font(.brand(52))
                         .lineLimit(2)
                         .minimumScaleFactor(0.7)
                         .accessibilityAddTraits(.isHeader)
-                    Text("Optional. Your numbers are charted next to your photos.")
+                    Text("Your timelapse starts now. Optional: add your numbers to chart them next to your photos.")
                         .foregroundStyle(Theme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                     field(.weight)

@@ -12,6 +12,10 @@ enum TimelapseExporter {
     }
 
     static let canvas = CGSize(width: 1080, height: 1920)
+    /// Free exports are encoded at half size; subscribers get the full canvas.
+    nonisolated static func outputSize(fullQuality: Bool) -> CGSize {
+        fullQuality ? canvas : CGSize(width: canvas.width / 2, height: canvas.height / 2)
+    }
     private static let fps: Int32 = 30
     private static let fadeFrames = 6
     private static let endCardSeconds = 2.2
@@ -23,20 +27,21 @@ enum TimelapseExporter {
 
     // MARK: Video
 
-    nonisolated static func video(frames: [Frame], branded: Bool) async throws -> URL {
+    nonisolated static func video(frames: [Frame], branded: Bool, fullQuality: Bool = true) async throws -> URL {
+        let size = outputSize(fullQuality: fullQuality)
         guard !frames.isEmpty else { throw ExportError.failed }
         let url = URL.temporaryDirectory.appending(path: "Gainlapse-timelapse-\(UUID().uuidString.prefix(6)).mp4")
         let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
         let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
             AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: canvas.width,
-            AVVideoHeightKey: canvas.height,
+            AVVideoWidthKey: size.width,
+            AVVideoHeightKey: size.height,
         ])
         input.expectsMediaDataInRealTime = false
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-            kCVPixelBufferWidthKey as String: canvas.width,
-            kCVPixelBufferHeightKey as String: canvas.height,
+            kCVPixelBufferWidthKey as String: size.width,
+            kCVPixelBufferHeightKey as String: size.height,
         ])
         guard writer.canAdd(input) else { throw ExportError.failed }
         writer.add(input)
@@ -332,7 +337,9 @@ enum TimelapseExporter {
             space: CGColorSpaceCreateDeviceRGB(),
             bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
         ) else { return nil }
-        context.draw(cg, in: CGRect(origin: .zero, size: canvas))
+        // Scales the full-size frame down to the buffer when the export is smaller.
+        context.interpolationQuality = .high
+        context.draw(cg, in: CGRect(x: 0, y: 0, width: CVPixelBufferGetWidth(buffer), height: CVPixelBufferGetHeight(buffer)))
         return buffer
     }
 

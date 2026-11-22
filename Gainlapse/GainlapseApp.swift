@@ -65,14 +65,16 @@ struct RootView: View {
                         ProgressView().tint(.white)
                     }
                 }
-            } else if !subscriptions.isEntitled {
-                PaywallView()
+            } else if !subscriptions.isEntitled && store.profile.seenIntroPaywall != true {
+                // Shown once after onboarding. Closing it opens the free app.
+                PaywallView(context: .intro) { store.profile.seenIntroPaywall = true }
             } else {
                 MainTabs()
             }
         }
         .animation(.smooth, value: store.profile.onboardingDone)
         .animation(.smooth, value: subscriptions.isEntitled)
+        .animation(.smooth, value: store.profile.seenIntroPaywall)
     }
 }
 
