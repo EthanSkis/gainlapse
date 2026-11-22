@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import RevenueCat
 import StoreKit
 
 @MainActor
@@ -7,6 +8,22 @@ import StoreKit
 final class Subscriptions {
     static let weeklyID = "com.ethangardner.gainlapse.weekly"
     static let annualID = "com.ethangardner.gainlapse.annual"
+
+    /// RevenueCat's public Apple SDK key (starts with "appl_"). It is meant to ship inside the app.
+    /// Left empty, RevenueCat stays off and the app works exactly as before.
+    static let revenueCatAPIKey = "appl_jxOPfxfrpeZuBUQmdprSaOVPOVB"
+
+    /// RevenueCat watches purchases the app completes itself, so the paywall, the entitlement check
+    /// and the server's signed-transaction check all keep running on StoreKit as before.
+    static func configureRevenueCat() {
+        guard !revenueCatAPIKey.isEmpty, !Purchases.isConfigured else { return }
+        #if DEBUG
+        Purchases.logLevel = .debug
+        #endif
+        Purchases.configure(with: Configuration.Builder(withAPIKey: revenueCatAPIKey)
+            .with(purchasesAreCompletedBy: .myApp, storeKitVersion: .storeKit2)
+            .build())
+    }
 
     private(set) var products: [Product] = []
     private(set) var isEntitled = false
@@ -36,6 +53,7 @@ final class Subscriptions {
     private static let lastKnownKey = "subscription.lastKnownEntitled"
 
     func start() async {
+        Self.configureRevenueCat()
         if UserDefaults.standard.bool(forKey: Self.lastKnownKey) {
             isEntitled = true
             hasChecked = true
@@ -48,7 +66,23 @@ final class Subscriptions {
         }
         await refreshEntitlement()
         hasChecked = true
+        Task { await syncExistingSubscriptionOnce() }
         await loadProducts()
+    }
+
+    private static let revenueCatSyncedKey = "revenuecat.didSyncExistingSubscription"
+
+    /// People who subscribed before RevenueCat was added are unknown to it. The first launch of a
+    /// build with RevenueCat sends their subscription over once, then never again on this device.
+    private func syncExistingSubscriptionOnce() async {
+        guard Purchases.isConfigured,
+              !UserDefaults.standard.bool(forKey: Self.revenueCatSyncedKey) else { return }
+        if isEntitled {
+            // On failure the flag stays unset, so the next launch tries again.
+            guard (try? await Purchases.shared.syncPurchases()) != nil else { return }
+        }
+        // Nothing to send when there is no subscription; a later purchase is reported as it happens.
+        UserDefaults.standard.set(true, forKey: Self.revenueCatSyncedKey)
     }
 
     func loadProducts() async {
@@ -99,6 +133,10 @@ final class Subscriptions {
     /// Returns true when the user now has access. A cancelled purchase simply returns false.
     func purchase(_ product: Product) async throws -> Bool {
         let result = try await product.purchase()
+        if Purchases.isConfigured {
+            // Reporting is best effort; a RevenueCat outage never blocks a purchase.
+            _ = try? await Purchases.shared.recordPurchase(result)
+        }
         switch result {
         case .success(let verification):
             guard case .verified(let transaction) = verification else { return false }
@@ -114,6 +152,7 @@ final class Subscriptions {
 
     func restore() async throws {
         try await AppStore.sync()
+        if Purchases.isConfigured { _ = try? await Purchases.shared.syncPurchases() }
         await refreshEntitlement()
     }
 }

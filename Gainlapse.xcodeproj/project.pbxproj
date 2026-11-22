@@ -13,6 +13,7 @@
 
 /* Begin PBXBuildFile section */
 		A10000000000000000000021 /* GainlapseWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000020 /* GainlapseWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A10000000000000000000042 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000041 /* RevenueCat */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000042 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,6 +118,9 @@
 				A10000000000000000000025 /* Shared */,
 			);
 			name = Gainlapse;
+			packageProductDependencies = (
+				A10000000000000000000041 /* RevenueCat */,
+			);
 			productName = Gainlapse;
 			productReference = A10000000000000000000005 /* Gainlapse.app */;
 			productType = "com.apple.product-type.application";
@@ -182,6 +187,9 @@
 			);
 			mainGroup = A10000000000000000000007;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A10000000000000000000040 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A10000000000000000000009 /* Products */;
 			projectDirPath = "";
@@ -397,6 +405,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A10000000000000000000040 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.103.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A10000000000000000000041 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000040 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A1000000000000000000000E /* Project object */;
 }
