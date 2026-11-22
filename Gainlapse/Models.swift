@@ -85,4 +85,6 @@ struct UserProfile: Codable {
     var seenRecaps: [Int]?
     /// True once the paywall after onboarding has been shown and closed, so it doesn't block the app again.
     var seenIntroPaywall: Bool?
+    /// The angles taken each week, in order. nil means front only.
+    var trackedPoses: [Pose]?
 }

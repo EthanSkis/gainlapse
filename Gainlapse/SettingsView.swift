@@ -40,6 +40,13 @@ struct SettingsView: View {
                     ScheduleControls()
                 }
                 Section {
+                    TrackedPosesPicker(style: .toggles)
+                } header: {
+                    Text("Weekly angles")
+                } footer: {
+                    Text("After your front photo, the camera moves on to each angle you track. You can always stop after the front one.")
+                }
+                Section {
                     Picker("Goal", selection: goal) {
                         ForEach(Goal.allCases) { option in Text(option.title).tag(option) }
                     }

@@ -225,7 +225,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, -20)
                 .padding(.vertical, 22)
                 .opacity(step == 0 ? 1 : 0)
-            Text("One photo a week. A timelapse of every gain.")
+            Text("One photo a week.\nA timelapse of every gain.")
                 .font(.title2.weight(.bold))
                 .foregroundStyle(.black)
                 .fixedSize(horizontal: false, vertical: true)
@@ -324,6 +324,15 @@ struct OnboardingView: View {
     private var firstPhoto: some View {
         VStack(alignment: .leading, spacing: 18) {
             title("TAKE YOUR WEEK 1 PHOTO").modifier(entrance(0, on: 4))
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Angles to track each week").font(.subheadline.weight(.semibold))
+                TrackedPosesPicker()
+                Text("Front is always included. Side and back are optional.")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            .padding(.bottom, 4)
+            .modifier(entrance(1, on: 4))
             tip("Prop your phone up and use the timer", symbol: "timer").modifier(entrance(1, on: 4))
             tip("Pick a spot with good light you can use every week", symbol: "sun.max.fill").modifier(entrance(2, on: 4))
             tip("Your photos are private and never public", symbol: "lock.fill").modifier(entrance(3, on: 4))

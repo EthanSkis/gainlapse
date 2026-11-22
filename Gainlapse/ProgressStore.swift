@@ -418,6 +418,25 @@ final class ProgressStore {
         return Pose.allCases.filter { !taken.contains($0) }
     }
 
+    /// Front always comes first; side and back are added by choice.
+    var trackedPoses: [Pose] {
+        let chosen = Set(profile.trackedPoses ?? [])
+        return Pose.allCases.filter { $0 == .front || chosen.contains($0) }
+    }
+
+    func setTracked(_ pose: Pose, _ isTracked: Bool) {
+        guard pose != .front else { return }
+        var chosen = Set(profile.trackedPoses ?? [.front])
+        if isTracked { chosen.insert(pose) } else { chosen.remove(pose) }
+        profile.trackedPoses = Pose.allCases.filter { chosen.contains($0) }
+    }
+
+    /// The chosen angles still to take this week, in order.
+    var missingTrackedPosesThisWeek: [Pose] {
+        let taken = Set(photosThisWeek.map(\.pose))
+        return trackedPoses.filter { !taken.contains($0) }
+    }
+
     var latestPhoto: ProgressPhoto? { photos.last }
 
     /// Consecutive weeks with a photo. This week counts once taken, and doesn't break the streak before then.
@@ -521,6 +540,12 @@ final class ProgressStore {
         #if DEBUG
         profile.goal = .bulk
         profile.onboardingDone = true
+        if DebugFlags.storeShots, let lastPhotoDay = calendar.date(byAdding: .day, value: -2, to: .now) {
+            // Photo day matches the sample dates, so each sample lands in its own week.
+            profile.checkInWeekday = calendar.component(.weekday, from: lastPhotoDay)
+            profile.checkInHour = 0
+            profile.checkInMinute = 0
+        }
         for index in 0..<weeks {
             // A screenshot run ends two days ago, so this week's photo and check-in are already done.
             let daysBack = DebugFlags.storeShots ? 7 * (weeks - 1 - index) + 2 : 7 * (weeks - index)

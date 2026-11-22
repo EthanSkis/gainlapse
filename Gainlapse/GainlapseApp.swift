@@ -144,7 +144,7 @@ struct MainTabs: View {
             guard item == .capture else { return }
             selection = previous
             // Opens on a pose that's still missing, so it doesn't replace a photo by accident.
-            capture = CaptureRequest(pose: store.hasPhotoThisWeek ? store.missingPosesThisWeek.first : nil)
+            capture = CaptureRequest(pose: store.hasPhotoThisWeek ? store.missingTrackedPosesThisWeek.first : nil)
         }
         .fullScreenCover(item: $capture) { request in
             CaptureFlow(isOnboarding: false, initialPose: request.pose, isRetake: request.isRetake)

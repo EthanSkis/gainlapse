@@ -29,7 +29,7 @@ struct HomeView: View {
                     MeasurementsRow { logMetric = $0 }
                         .padding(.horizontal, 16)
                     if (reminderStatus == .denied || reminderStatus == .notDetermined) && !DebugFlags.storeShots { remindersCard }
-                    if store.hasPhotoThisWeek, let pose = store.missingPosesThisWeek.first {
+                    if store.hasPhotoThisWeek, let pose = store.missingTrackedPosesThisWeek.first {
                         Button("Add \(pose.title.lowercased()) pose") { onCapture(pose, false) }
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.secondaryText)

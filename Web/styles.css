@@ -94,7 +94,8 @@ a { color: inherit; }
 .hero .wrap { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 32px; align-items: end; }
 .hero h1 { font-size: clamp(96px, min(15vw, 20vh), 196px); }
 .hero .barbell { margin: 14px 0 22px; width: calc(100% + 16px); max-width: 520px; height: auto; color: #0e0c0b; }
-.hero .lede { font-size: clamp(22px, 2.4vw, 28px); font-weight: 700; line-height: 1.2; max-width: 22ch; margin: 0 0 28px; letter-spacing: -0.01em; }
+.hero .lede { font-size: clamp(22px, 2.4vw, 28px); font-weight: 700; line-height: 1.2; margin: 0 0 28px; letter-spacing: -0.01em; }
+.hero .lede .nowrap { white-space: nowrap; }
 .hero .cta-row { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; padding-bottom: 72px; }
 .hero .cta-note { font-size: 14px; font-weight: 600; opacity: 0.75; }
 .hero .phone { align-self: end; justify-self: center; width: min(340px, 100%); margin-bottom: -90px; }
@@ -168,7 +169,7 @@ section { padding: 120px 0; }
 .privacy-grid p { color: var(--muted); margin: 0; font-size: 16px; }
 
 /* Pricing */
-.pricing { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 760px; }
+.pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1100px; }
 .plan { background: var(--surface); border: 1px solid var(--faint); border-radius: 28px; padding: 32px; position: relative; }
 .plan.best { background: var(--accent); color: #0e0c0b; border-color: transparent; }
 .plan .badge { position: absolute; top: 24px; right: 24px; background: #0e0c0b; color: var(--ink); font: 700 12px/1 var(--body); padding: 7px 10px; border-radius: 999px; }
@@ -176,6 +177,10 @@ section { padding: 120px 0; }
 .plan .price { font-size: 88px; }
 .plan .per { font-weight: 700; opacity: 0.7; margin-top: 6px; }
 .plan.best .stamp { color: rgba(0, 0, 0, 0.6); }
+.plan-list { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; font-weight: 600; }
+.plan-list li { padding-left: 22px; position: relative; }
+.plan-list li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 10px; height: 10px; border-radius: 3px; background: var(--accent); }
+.plan.best .plan-list li::before { background: #0e0c0b; }
 .pricing-note { color: var(--muted); font-size: 14px; margin-top: 20px; max-width: 70ch; }
 
 /* Final CTA */

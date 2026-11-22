@@ -16,6 +16,8 @@ struct CaptureFlow: View {
     @State private var saveFailed = false
     @State private var confirmReplace = false
     @State private var retakeRequested = false
+    /// The first photo saved this session. Later angles are extras; the check-in is about this one.
+    @State private var firstSaved: ProgressPhoto?
 
     var body: some View {
         Group {
@@ -36,7 +38,9 @@ struct CaptureFlow: View {
             } else if let captured {
                 review(captured)
             } else {
-                CameraView(pose: $pose) { image in
+                CameraView(pose: $pose,
+                           stepTitle: firstSaved == nil ? nil : "Next: \(pose.title.lowercased()) pose",
+                           onDoneForWeek: firstSaved.map { first in { finish(with: first) } }) { image in
                     store.saveDraft(image, pose: pose)
                     captured = image
                 }
@@ -72,7 +76,9 @@ struct CaptureFlow: View {
                 ZStack {
                     Text("\(pose.title) pose").font(.headline)
                     HStack {
-                        GlassIconButton(symbol: "xmark", label: "Close") { dismiss() }
+                        GlassIconButton(symbol: "xmark", label: "Close") {
+                            if let firstSaved { finish(with: firstSaved) } else { dismiss() }
+                        }
                         Spacer()
                     }
                 }
@@ -95,6 +101,16 @@ struct CaptureFlow: View {
         }
     }
 
+    /// Ends the photo session: starting stats during onboarding, otherwise the check-in for the first photo.
+    private func finish(with first: ProgressPhoto) {
+        store.clearDraft()
+        if isOnboarding {
+            withAnimation(.smooth) { showsStartingStats = true }
+        } else {
+            withAnimation(.smooth) { savedPhoto = first }
+        }
+    }
+
     private func use(_ image: UIImage) {
         let replacesPhoto = store.photosThisWeek.contains { $0.pose == pose }
         if replacesPhoto && !isRetake && !retakeRequested {
@@ -109,10 +125,14 @@ struct CaptureFlow: View {
             let photo = try store.addPhoto(image, pose: pose)
             store.clearDraft()
             UINotificationFeedbackGenerator().notificationOccurred(.success)
-            if isOnboarding {
-                withAnimation(.smooth) { showsStartingStats = true }
+            let first = firstSaved ?? photo
+            // Moves on to the next angle they track, unless this was a retake of one photo.
+            if !isRetake, !retakeRequested, let next = store.missingTrackedPosesThisWeek.first {
+                firstSaved = first
+                pose = next
+                withAnimation(.smooth) { captured = nil }
             } else {
-                savedPhoto = photo
+                finish(with: first)
             }
         } catch {
             saveFailed = true
@@ -122,13 +142,18 @@ struct CaptureFlow: View {
 
 struct CameraView: View {
     @Binding var pose: Pose
+    /// Shown above the viewfinder when the camera moves on to another angle, such as "Next: side pose".
+    var stepTitle: String?
+    /// When set, a "Done for this week" button ends the session, and Close does the same.
+    var onDoneForWeek: (() -> Void)?
     let onCapture: (UIImage) -> Void
 
     @Environment(ProgressStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @StateObject private var camera = CameraController()
-    @State private var timerSeconds = 5
+    /// Remembered, so moving on to the next angle keeps the timer they chose.
+    @AppStorage("camera.timerSeconds") private var timerSeconds = 5
     @State private var countdown: Int?
     @State private var countdownTask: Task<Void, Never>?
     @State private var showGhost = true
@@ -149,6 +174,13 @@ struct CameraView: View {
                     posePicker
                     Spacer(minLength: 0)
                     bottomBar
+                    if let onDoneForWeek {
+                        Button("Done for this week", action: onDoneForWeek)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Theme.secondaryText)
+                            .frame(minHeight: 36)
+                            .disabled(countdown != nil)
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 8)
@@ -166,8 +198,16 @@ struct CameraView: View {
 
     private var topBar: some View {
         HStack {
-            GlassIconButton(symbol: "xmark", label: "Close") { dismiss() }
+            GlassIconButton(symbol: "xmark", label: "Close") {
+                if let onDoneForWeek { onDoneForWeek() } else { dismiss() }
+            }
             Spacer()
+            if let stepTitle {
+                Text(stepTitle)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Theme.accent)
+                Spacer()
+            }
             if store.ghostPhoto(for: pose) != nil {
                 GlassIconButton(symbol: showGhost ? "person.fill.viewfinder" : "viewfinder",
                                 label: showGhost ? "Hide last photo" : "Show last photo") { showGhost.toggle() }
